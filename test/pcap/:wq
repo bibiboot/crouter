@@ -1,0 +1,60 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pcap.h>
+
+// gcc main.c -lpcap
+// sudo ./a.out
+
+int default_device(char **dev){
+    char errbuf[PCAP_ERRBUF_SIZE];
+
+    *dev = pcap_lookupdev(errbuf);
+    if (*dev == NULL) {
+        fprintf(stderr, "Can not find device: %s\n", errbuf);
+        return 1;
+    }
+
+    printf("Device: %s\n", *dev);
+    return 0;
+}
+
+int main(int argc, char *arg[]){
+    //char *dev = argv[1];
+    //printf("Device: %s\n", dev);
+
+    char *dev;
+    if (default_device(&dev) != 0) {
+        exit(0);
+    }
+
+    // Sniff traffic in promiscous mode
+    // Get handle to sniffing session
+    pcap_t *handle;
+    char errbuf[PCAP_ERRBUF_SIZE];
+    handle = pcap_open_live(dev, BUFSIZ, 1, 1000, errbuf);
+    if (handle == NULL) {
+        fprintf(stderr, "Can not open the device: %s\n", errbuf);
+        return 2;
+    }
+
+    // Link-header is of type ethernet
+    if (pcap_datalink(handle) != DLT_EN10MB) {
+        fprintf(stderr, "Device %s do not provide ethernet headers: %s\n", dev, errbuf);
+        return 2;
+    }
+
+    // Compiled filter
+    struct bpf_program fp;
+    char filter_exp[] = "port 23";
+    if (pcap_compile(handle, &fp, filter_exp, 0, dev) == -1) {
+        fprintf(stderr, "Couldn't parse filter %s: %s\n", filter_exp, pcap_geterr(handle));
+        return(2);
+    }
+                             }
+    if (pcap_setfilter(handle, &fp) == -1) {
+        fprintf(stderr, "Couldn't install filter %s: %s\n", filter_exp, pcap_geterr(handle));
+        return(2);
+    }
+
+    return 0;
+}
