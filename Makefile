@@ -9,10 +9,10 @@ DATA_DIR=$(CURDIR)/etc/data
 SCRIPT_DIR=$(CURDIR)/scripts
 
 # All header files in libraries
-INCLUDES_A=-I$(SRC_DIR) -I$(CURDIR) \
-	   -I$(CURDIR)/deps/uthash \
-	   -I$(NODE_A_DIR) \
-	   -lpthread \
+INCLUDES=-I$(SRC_DIR) -I$(CURDIR) \
+         -I$(CURDIR)/deps/uthash \
+         -I$(NODE_A_DIR) \
+         -lpthread \
 
 # All .c files in src folder
 _SOURCES=$(shell find $(SRC_DIR) -type f -iname '*.[c]')
@@ -24,7 +24,7 @@ create:
 
 # Build
 build:
-	$(CC) -o $(BIN_DIR)/r $(_SOURCES)
+	$(CC) -o $(BIN_DIR)/r $(_SOURCES) $(INCLUDES)
 
 clean:
 	@echo "Deleting bin folder"
