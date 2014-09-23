@@ -3,6 +3,11 @@ crouter
 
 Custom based ip router
 
+Install
+======
+```
+sudo apt-get install libpcap0.8-dev
+```
 
 Alias to add in ~/.bashrc or ~/.profile (Shorcuts)
 =================================================
