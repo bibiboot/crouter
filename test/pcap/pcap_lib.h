@@ -14,10 +14,10 @@
 #define SNAP_LEN 1518
 
 /* ethernet headers are always exactly 14 bytes [1] */
-#define SIZE_ETHERNET 14
+#define SIZE_ETHERNET_1 14
 
 /* Ethernet addresses are 6 bytes */
-#define ETHER_ADDR_LEN  6
+#define ETHER_ADDR_LEN_1  6
 
 /* Ethernet header */
 struct sniff_ethernet {

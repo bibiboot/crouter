@@ -13,6 +13,55 @@ int default_device(char **dev){
     return 0;
 }
 
+
+void print_icmp_packet(u_char *packet) {
+
+    struct icmphdr *icmph = (struct icmphdr *)(packet + iphdrlen  + sizeof(struct ethhdr));
+
+    int header_size =  sizeof(struct ethhdr) + iphdrlen + sizeof icmph;
+
+    fprintf(stdout , "\n\n***********************ICMP Packet*************************\n");
+
+    //print_ip_header(Buffer , Size);
+
+    fprintf(stdout , "\n");
+
+    fprintf(stdout , "ICMP Header\n");
+    fprintf(stdout , "   |-Type : %d",(unsigned int)(icmph->type));
+
+    if((unsigned int)(icmph->type) == 11)
+    {
+        fprintf(stdout , "  (TTL Expired)\n");
+    }
+    else if((unsigned int)(icmph->type) == ICMP_ECHOREPLY)
+    {
+        fprintf(stdout , "  (ICMP Echo Reply)\n");
+    }
+
+    fprintf(stdout , "   |-Code : %d\n",(unsigned int)(icmph->code));
+    fprintf(stdout , "   |-Checksum : %d\n",ntohs(icmph->checksum));
+    //fprintf(stdout , "   |-ID       : %d\n",ntohs(icmph->id));
+    //fprintf(logfile , "   |-Sequence : %d\n",ntohs(icmph->sequence));
+    fprintf(stdout   , "\n");
+
+    fprintf(stdout , "IP Header\n");
+    //PrintData(Buffer,iphdrlen);
+
+    fprintf(stdout , "UDP Header\n");
+    //PrintData(Buffer + iphdrlen , sizeof icmph);
+
+    fprintf(stdout , "Data Payload\n");
+
+    //Move the pointer ahead and reduce the size of string
+    //PrintData(Buffer + header_size , (Size - header_size) );
+
+    fprintf(stdout , "\n###########################################################");
+}
+
+
+
+}
+
 /*
  * dissect/print packet
  */
@@ -35,11 +84,13 @@ got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet)
 	printf("\nPacket number %d:\n", count);
 	count++;
 
+        print_icmp_packet(packet,0 );
+
 	/* define ethernet header */
 	ethernet = (struct sniff_ethernet*)(packet);
 
 	/* define/compute ip header offset */
-	ip = (struct sniff_ip*)(packet + SIZE_ETHERNET);
+	ip = (struct sniff_ip*)(packet + SIZE_ETHERNET_1);
 	size_ip = IP_HL(ip)*4;
 	if (size_ip < 20) {
 		printf("   * Invalid IP header length: %u bytes\n", size_ip);
@@ -60,6 +111,7 @@ got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet)
 			return;
 		case IPPROTO_ICMP:
 			printf("   Protocol: ICMP\n");
+                        print_icmp_packet(packet);
 			return;
 		case IPPROTO_IP:
 			printf("   Protocol: IP\n");
@@ -74,7 +126,7 @@ got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet)
 	 */
 
 	/* define/compute tcp header offset */
-	tcp = (struct sniff_tcp*)(packet + SIZE_ETHERNET + size_ip);
+	tcp = (struct sniff_tcp*)(packet + SIZE_ETHERNET_1 + size_ip);
 	size_tcp = TH_OFF(tcp)*4;
 	if (size_tcp < 20) {
 		printf("   * Invalid TCP header length: %u bytes\n", size_tcp);
@@ -85,7 +137,7 @@ got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet)
 	printf("   Dst port: %d\n", ntohs(tcp->th_dport));
 
 	/* define/compute tcp payload (segment) offset */
-	payload = (u_char *)(packet + SIZE_ETHERNET + size_ip + size_tcp);
+	payload = (u_char *)(packet + SIZE_ETHERNET_1 + size_ip + size_tcp);
 
 	/* compute tcp payload (segment) size */
 	size_payload = ntohs(ip->ip_len) - (size_ip + size_tcp);
@@ -132,7 +184,8 @@ int packet_capture_config(struct bpf_program *fp, pcap_t **handle, char *dev){
     }
 
     // Compiled filter
-    char filter_exp[] = "port 80";
+    //char filter_exp[] = "port 80";
+    char filter_exp[] = "dst 127.0.0.1";
     if (pcap_compile(*handle, fp, filter_exp, 0, net) == -1) {
         fprintf(stderr, "Couldn't parse filter %s: %s\n", filter_exp, pcap_geterr(*handle));
         return(2);

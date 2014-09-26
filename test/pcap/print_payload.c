@@ -1,5 +1,56 @@
 #include "print_payload.h"
 
+void print_icmp_packet(const u_char* packet, int Size)
+{
+    unsigned short iphdrlen;
+
+    struct iphdr *iph = (struct iphdr *)(packet  + sizeof(struct ethhdr));
+    iphdrlen = iph->ihl * 4;
+
+    struct icmphdr *icmph = (struct icmphdr *)(packet + iphdrlen  + sizeof(struct ethhdr));
+
+    int header_size =  sizeof(struct ethhdr) + iphdrlen + sizeof icmph;
+
+    fprintf(stdout , "\n\n***********************ICMP Packet*************************\n");
+
+    //print_ip_header(Buffer , Size);
+
+    fprintf(stdout , "\n");
+
+    fprintf(stdout , "ICMP Header\n");
+    fprintf(stdout , "   |-Type : %d",(unsigned int)(icmph->type));
+
+    if((unsigned int)(icmph->type) == 11)
+    {
+        fprintf(stdout , "  (TTL Expired)\n");
+    }
+    else if((unsigned int)(icmph->type) == ICMP_ECHOREPLY)
+    {
+        fprintf(stdout , "  (ICMP Echo Reply)\n");
+    }
+
+    fprintf(stdout , "   |-Code : %d\n",(unsigned int)(icmph->code));
+    fprintf(stdout , "   |-Checksum : %d\n",ntohs(icmph->checksum));
+    //fprintf(stdout , "   |-ID       : %d\n",ntohs(icmph->id));
+    //fprintf(logfile , "   |-Sequence : %d\n",ntohs(icmph->sequence));
+    fprintf(stdout   , "\n");
+
+    fprintf(stdout , "IP Header\n");
+    //PrintData(Buffer,iphdrlen);
+
+    fprintf(stdout , "UDP Header\n");
+    //PrintData(Buffer + iphdrlen , sizeof icmph);
+
+    fprintf(stdout , "Data Payload\n");
+
+    //Move the pointer ahead and reduce the size of string
+    //PrintData(Buffer + header_size , (Size - header_size) );
+
+    fprintf(stdout , "\n###########################################################");
+}
+
+
+
 /*
  * print data in rows of 16 bytes: offset   hex   ascii
  *
