@@ -14,10 +14,13 @@
 #define SNAP_LEN 1518
 
 /* ethernet headers are always exactly 14 bytes [1] */
-#define SIZE_ETHERNET_1 14
+//#define SIZE_ETHERNET_1 14
+#define SIZE_ETHERNET 14
 
 /* Ethernet addresses are 6 bytes */
 #define ETHER_ADDR_LEN_1  6
+
+#define SNIFF_FILTER "udp"
 
 /* Ethernet header */
 struct sniff_ethernet {
@@ -69,6 +72,15 @@ struct sniff_tcp {
         u_short th_sum;                 /* checksum */
         u_short th_urp;                 /* urgent pointer */
 };
+
+/* UDP header */
+struct sniff_udp {
+    uint16_t sport;  /* source port */
+    uint16_t dport;  /* destination port */
+    uint16_t udp_length;
+    uint16_t udp_sum;    /* checksum */
+};
+
 
 int default_device(char **dev);
 

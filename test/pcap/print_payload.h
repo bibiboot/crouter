@@ -11,5 +11,6 @@
 
 void print_payload(const u_char *payload, int len);
 
-//void print_icmp_packet(unsigned char* Buffer , int Size);
 void print_icmp_packet(const u_char* Buffer , int Size);
+
+void print_mac(const u_char *host);

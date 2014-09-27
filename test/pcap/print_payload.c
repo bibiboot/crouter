@@ -1,5 +1,12 @@
 #include "print_payload.h"
 
+void print_mac(const u_char *host){
+    printf("MAC Address : %02x:%02x:%02x:%02x:%02x:%02x\n",
+           (unsigned char) host[0], (unsigned char) host[1], (unsigned char) host[2],
+           (unsigned char) host[3], (unsigned char) host[4], (unsigned char) host[5]);
+}
+
+
 void print_icmp_packet(const u_char* packet, int Size)
 {
     unsigned short iphdrlen;
