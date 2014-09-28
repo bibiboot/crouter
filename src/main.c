@@ -1,111 +1,42 @@
 #include "globals.h"
 #include "hashl.h"
 #include "print_packet.h"
-#include "socket_util.h"
 #include "packet_sniffer.h"
+#include "packet_update.h"
+#include "packet_send.h"
+#include "packet_create.h"
+#include "socket_util.h"
+#include "socket_addr_create.h"
 #include "util.h"
 
-void create_socket_address(struct sockaddr_ll *socket_address, int src_index, unsigned char *dest_mac){
-    /*prepare sockaddr_ll*/
-    /*RAW communication*/
-    socket_address->sll_family   = PF_PACKET;
-    /*we don't use a protocoll above ethernet layer
-    ->just use anything here*/
-    socket_address->sll_protocol = htons(ETH_P_IP);
+int main(int argc, char *argv[]){
 
-    /*index of the network device
-    see full code later how to retrieve it*/
-    socket_address->sll_ifindex  = src_index;
-    /*ARP hardware identifier is ethernet*/
-    socket_address->sll_hatype   = ARPHRD_ETHER;
+    create_log_file();
 
-    /*target is another host*/
-    socket_address->sll_pkttype  = PACKET_OTHERHOST;
+    unsigned char *packet = (unsigned char *) malloc(65536); //Its Big!
+    /*Sniff will return me a ICMP packet*/
+    int size = sniff(packet);
 
-    // The octet in a ETH_ALEN = 6
-    /*address length*/
-    socket_address->sll_halen = ETH_ALEN;
+    print_icmp_packet( packet , size);
 
-    /*Assign the src mac address to the socket address*/
-    memcpy(socket_address->sll_addr, dest_mac, ETH_ALEN);
-}
-
-void create_packet(void *packet, unsigned char *src_mac, unsigned char *dest_mac){
-
-   /*pointer to ethenet header*/
-    unsigned char* etherhead = packet;
-
-    /*userdata in ethernet frame*/
-    unsigned char* data = packet + ETH_HLEN;
-
-    /*another pointer to ethernet header*/
-    struct ethhdr *eh = (struct ethhdr *)etherhead;
-
-    /*set the frame header*/
-    memcpy((void*)packet, (void*)dest_mac, ETH_ALEN);
-    memcpy((void*)(packet+ETH_ALEN), (void*)src_mac, ETH_ALEN);
-    eh->h_proto = 0x00;
-    //eh->h_proto = 0x0806;
-    /*fill the frame with some data*/
-    /* fill ethernet payload with some data */
-    int j;
-    for (j = 0; j < PACKET_SIZE - ETH_HLEN; j++)
-        data[j] = (unsigned char)(0);
-    *(int *)data = htonl(10);
-}
-
-void send_packet() {
-    int s; /*socketdescriptor*/
     char if_name[IFNAMSIZ] = "inf001";
-    struct ifreq ifr;
-    /*target address*/
-    struct sockaddr_ll socket_address;
-
-    /*other host MAC address*/
-    unsigned char dest_mac[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x05};
-
-    /*Create raw socket*/
-    s = get_socket();
+    //char if_name[IFNAMSIZ] = "wlan0";
+    int s = get_socket();
 
     /*Get current interface mac address*/
     unsigned char *src_mac = malloc(ETH_ALEN);
     interface_addr(s, if_name, src_mac);
 
-    //Find src interface index
-    int src_index = interface_index(s, if_name);
+    //eth0 3c:97:0e:9d:53:6e
+    unsigned char dest_mac[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x05};
+    //unsigned char dest_mac[6] = {0x3c, 0x97, 0x0e, 0x9d, 0x53, 0x53};
 
-    /*prepare sockaddr_ll*/
-    create_socket_address(&socket_address, src_index, dest_mac);
+    /*Add the dest and src mac address*/
+    update_icmp_packet(packet, src_mac, dest_mac);
 
-    /*buffer for ethernet frame*/
-    void* packet = (void*)malloc(PACKET_SIZE);
+    send_icmp_packet(if_name, dest_mac, packet);
 
-    /*Create packet*/
-    create_packet(packet, src_mac, dest_mac);
-
-    /*send the packet*/
-    int send_result = 0;
-    send_result = sendto(s, packet, PACKET_SIZE , 0, (struct sockaddr*)&socket_address, sizeof(socket_address));
-    if (send_result < 0){
-	printf("ERROR: sendto\n");
-	perror("sendto");
-	exit(1);
-    }
-
-    fprintf(LOGFILE, "Header : ");
-    print_data(packet, ETH_HLEN);
-
-    //fprintf(LOGFILE, "Data : ");
-    //print_data(packet + ETH_HLEN, PACKET_SIZE- ETH_HLEN);
-}
-
-int main(int argc, char *argv[]){
-
-    //send_packet();
-
-    create_log_file();
-
-    sniff();
+    print_icmp_packet( packet , size);
 
     printf("SUCCESS\n");
     return 0;
