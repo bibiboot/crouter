@@ -14,7 +14,6 @@
 
 #include "uthash.h"
 #include "config.h"
-#include "my402list.h"
 
 // Print function name, filename and line number in print
 #define DEBUG(fmt, ...) printf("%s:%d: " fmt, __FILE__, __LINE__, __VA_ARGS__);
@@ -29,8 +28,6 @@ typedef struct hashl {
     // Sequence number
     vlong seq_num;
     // Address of the node in list.
-    My402ListElem *data_node_ptr;
-    My402ListElem *nack_node_ptr;
     UT_hash_handle hh;
 } hashed_link;
 
@@ -48,8 +45,6 @@ struct globals {
     struct config config;
     // Hashmap
     hashed_link *hashl;
-    // Linked list
-    My402List datal;
 };
 
 extern struct globals globals;

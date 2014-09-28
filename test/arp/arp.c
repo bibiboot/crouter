@@ -82,7 +82,7 @@ main (int argc, char **argv)
   src_ip = allocate_strmem (INET_ADDRSTRLEN);
 
   // Interface to send packet through.
-  strcpy (interface, "eth0");
+  strcpy (interface, "inf000");
 
   // Submit request for a socket descriptor to look up interface.
   if ((sd = socket (AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0) {
@@ -122,10 +122,10 @@ main (int argc, char **argv)
   memset (dst_mac, 0xff, 6 * sizeof (uint8_t));
 
   // Source IPv4 address:  you need to fill this out
-  strcpy (src_ip, "192.168.1.116");
+  strcpy (src_ip, "10.99.0.3");
 
   // Destination URL or IPv4 address (must be a link-local node): you need to fill this out
-  strcpy (target, "192.168.1.1");
+  strcpy (target, "10.1.0.1");
 
   // Fill out hints for getaddrinfo().
   memset (&hints, 0, sizeof (struct addrinfo));

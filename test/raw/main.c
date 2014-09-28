@@ -8,6 +8,8 @@
 
 #define PCKT_LEN 8192
 
+
+
 struct ipheader {
      unsigned char      iph_ihl:5, iph_ver:4;
      unsigned char      iph_tos;
@@ -41,21 +43,15 @@ unsigned short csum(unsigned short *buf, int len)
 }
 
 
-void create_udp_packet(char **buffer, int *sd){
-
+void create_udp_packet(char **buffer, int *sd, struct sockaddr_in *sin,
+                       char *src_port, char *dest_port,
+                       char *src_ip, char *dest_ip)
+{
     *buffer = malloc(PCKT_LEN);
 
     struct ipheader *ip = (struct ipheader *) *buffer;
     struct udpheader *udp = (struct udpheader *) (*buffer + sizeof(struct ipheader));
-    struct sockaddr_in sin, din;
-    int one = 1;
-    const int *val = &one;
-
-    if (argc != 5) {
-        printf("Invalid parameter!!!\n");
-        printf("- Usage: %s <source hostname/IP> <source port> <target hostname/IP> <target port>\n", argv[0]);
-        exit(-1);
-    }
+    struct sockaddr_in din;
 
     memset(*buffer, 0, PCKT_LEN);
 
@@ -67,14 +63,14 @@ void create_udp_packet(char **buffer, int *sd){
         printf("Scoket() - USING SOCK_RAW socket and UDP\n");
     }
 
-    sin.sin_family = AF_INET;
+    sin->sin_family = AF_INET;
     din.sin_family = AF_INET;
 
-    sin.sin_port = htons(atoi(argv[2]));
-    din.sin_port = htons(atoi(argv[4]));
+    sin->sin_port = htons(atoi(src_port));
+    din.sin_port = htons(atoi(dest_port));
 
-    sin.sin_addr.s_addr = inet_addr(argv[1]);
-    din.sin_addr.s_addr = inet_addr(argv[3]);
+    sin->sin_addr.s_addr = inet_addr(src_ip);
+    din.sin_addr.s_addr = inet_addr(dest_ip);
 
     ip->iph_ihl = 5;
     ip->iph_ver = 4;
@@ -87,13 +83,13 @@ void create_udp_packet(char **buffer, int *sd){
     // UDP
     ip->iph_protocol = 17;
     // Source address
-    ip->iph_sourceip = inet_addr(argv[1]);
-    ip->iph_destip = inet_addr(argv[3]);
+    ip->iph_sourceip = inet_addr(src_ip);
+    ip->iph_destip = inet_addr(dest_ip);
 
     // Fabricate the UDP header. Source port number
-    udp->udph_srcport = htons(atoi(argv[2]));
+    udp->udph_srcport = htons(atoi(src_port));
     // Destination port number
-    udp->udph_destport = htons(atoi(argv[4]));
+    udp->udph_destport = htons(atoi(dest_port));
     udp->udph_len = htons(sizeof(struct udpheader));
     // Calculate checksum
     ip->iph_chksum = csum((unsigned short*)buffer, sizeof(struct ipheader) + sizeof(struct udpheader));
@@ -102,8 +98,17 @@ void create_udp_packet(char **buffer, int *sd){
 int main(int argc, char *argv[]){
     int sd;
     char *buffer;
+    int one = 1;
+    const int *val = &one;
+    struct sockaddr_in sin;
 
-    create_udp_packet(&buffer, &sd);
+    if (argc != 5) {
+        printf("Invalid parameter!!!\n");
+        printf("- Usage: %s <source hostname/IP> <source port> <target hostname/IP> <target port>\n", argv[0]);
+        exit(-1);
+    }
+
+    create_udp_packet(&buffer, &sd, &sin, argv[2], argv[4], argv[1], argv[3]);
 
     // Inform the kernel not to fill up the packet
     if(setsockopt(sd, IPPROTO_IP, IP_HDRINCL, val, sizeof(one)) < 0)
@@ -116,6 +121,7 @@ int main(int argc, char *argv[]){
     printf("Using Source IP: %s port: %u, Target IP: %s port: %u.\n",
             argv[1], atoi(argv[2]), argv[3], atoi(argv[4]));
 
+    struct ipheader *ip = (struct ipheader *)&buffer;
     int count = 1;
     for (; count <= 20; count++) {
         if (sendto(sd, buffer, ip->iph_len, 0, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
