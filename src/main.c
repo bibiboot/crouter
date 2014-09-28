@@ -2,6 +2,8 @@
 #include "hashl.h"
 #include "print_packet.h"
 #include "socket_util.h"
+#include "packet_sniffer.h"
+#include "util.h"
 
 void create_socket_address(struct sockaddr_ll *socket_address, int src_index, unsigned char *dest_mac){
     /*prepare sockaddr_ll*/
@@ -99,7 +101,11 @@ void send_packet() {
 
 int main(int argc, char *argv[]){
 
-    send_packet();
+    //send_packet();
+
+    create_log_file();
+
+    sniff();
 
     printf("SUCCESS\n");
     return 0;
