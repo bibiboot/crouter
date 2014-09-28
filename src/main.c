@@ -1,73 +1,7 @@
 #include "globals.h"
 #include "hashl.h"
-
-#include <sys/socket.h>
-#include <linux/if_packet.h>
-#include <linux/if_ether.h>
-#include <linux/if_arp.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/ioctl.h>
-
-#define PACKET_SIZE 1000
-#define LOGFILE stdout
-
-void print_data (unsigned char* data , int size)
-{
-    int i;
-    for(i=0 ; i < size ; i++)
-        fprintf(LOGFILE, "%02hhx ", data[i]);
-    fprintf(LOGFILE, "\n");
-}
-
-void print_mac(const char *addr)
-{
-    int i;
-    for (i = 0; i < ETH_ALEN - 1; i++)
-        printf("%02hhx:", addr[i]);
-    printf("%02hhx\n", addr[ETH_ALEN - 1]);
-}
-
-int interface_addr(int sock, char *ifname, unsigned char *addr)
-{
-    struct ifreq ifr;
-
-    /* retrieve corresponding source MAC */
-    strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
-    if (ioctl(sock, SIOCGIFHWADDR, &ifr) < 0) {
-        perror("Error in retrieveig mac address");
-        printf("Error\n");
-        return -EXIT_FAILURE;
-    }
-    memcpy(addr, ifr.ifr_hwaddr.sa_data, ETH_ALEN);
-
-    return EXIT_SUCCESS;
-}
-
-int interface_index(int sock, char *ifname)
-{
-    struct ifreq ifr;
-
-    /* retrieve source ethernet interface index */
-    strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
-    if (ioctl(sock, SIOCGIFINDEX, &ifr) < 0)
-        return -EXIT_FAILURE;
-
-    return ifr.ifr_ifindex;
-}
-
-int get_socket(){
-    int s = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
-    if (s == -1) {
-	printf("ERROR: socket\n");
-	perror("SOCKET:");
-	exit(1);
-    }
-    return s;
-}
+#include "print_packet.h"
+#include "socket_util.h"
 
 void create_socket_address(struct sockaddr_ll *socket_address, int src_index, unsigned char *dest_mac){
     /*prepare sockaddr_ll*/

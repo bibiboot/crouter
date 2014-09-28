@@ -27,6 +27,8 @@ void PrintData (unsigned char* , int);
 void PrintData2 (unsigned char* , int);
 
 FILE *logfile;
+//#define logfile stdout
+
 struct sockaddr_in source,dest;
 int tcp=0,udp=0,icmp=0,others=0,igmp=0,total=0,i,j;
 
@@ -312,7 +314,8 @@ void print_icmp_packet(unsigned char* Buffer , int Size)
 
     int header_size =  sizeof(struct ethhdr) + iphdrlen + sizeof icmph;
 
-    fprintf(logfile , "\n\n***********************ICMP Packet*************************\n");
+    //fprintf(logfile , "\n\n***********************ICMP Packet*************************\n");
+    printf("\n\n***********************ICMP Packet*************************\n");
 
     print_ip_header(Buffer , Size);
 

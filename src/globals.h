@@ -15,6 +15,8 @@
 #include "uthash.h"
 #include "config.h"
 
+#define PACKET_SIZE 1000
+#define LOGFILE stdout
 // Print function name, filename and line number in print
 #define DEBUG(fmt, ...) printf("%s:%d: " fmt, __FILE__, __LINE__, __VA_ARGS__);
 #define DBG(...) do{fprintf(stderr, "%s (%s, line %d): ", __func__, __FILE__, __LINE__); \
