@@ -36,7 +36,7 @@ void echo_reply(unsigned char *packet, int size){
 void echo_request(unsigned char *packet, int size){
 
     //print_icmp_packet( packet , size);
-    print_udp_packet( packet , size);
+    //print_udp_packet( packet , size);
 
     char if_name[IFNAMSIZ] = "inf001";
     //char if_name[IFNAMSIZ] = "wlan0";
@@ -56,7 +56,7 @@ void echo_request(unsigned char *packet, int size){
     send_icmp_packet(if_name, dest_mac, packet);
 
     //print_icmp_packet( packet , size);
-    print_udp_packet( packet , size);
+    //print_udp_packet( packet , size);
 }
 
 int main(int argc, char *argv[]){
@@ -66,6 +66,8 @@ int main(int argc, char *argv[]){
     unsigned char *packet = (unsigned char *) malloc(65536); //Its Big!
     /*Sniff will return me a ICMP packet*/
     int size = sniff(packet);
+
+    update_ip_packet(packet);
 
     echo_request(packet, size);
 
