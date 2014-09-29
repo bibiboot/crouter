@@ -1,4 +1,5 @@
-#include "print_packet.h"
+#include "filter.h"
+#include "middleware.h"
 #include "packet_sniffer.h"
 
 #include<netinet/in.h>
@@ -21,12 +22,11 @@
 struct sockaddr_in source,dest;
 int tcp=0,udp=0,icmp=0,others=0,igmp=0,total=0,i,j;
 
-int sniff(unsigned char *buffer)
+int sniff()
 {
     int saddr_size , data_size;
     struct sockaddr saddr;
-
-    //TODO unsigned char *buffer = (unsigned char *) malloc(65536); //Its Big!
+    unsigned char *buffer = (unsigned char *) malloc(65536); //Its Big!
 
     printf("Starting...\n");
 
@@ -49,9 +49,19 @@ int sniff(unsigned char *buffer)
             printf("Recvfrom error , failed to get packets\n");
             return 1;
         }
-        //Now process the packet
+
+        // Filter. Currently allowing all.
+        if (!is_allowed(buffer)) {
+            continue;
+        }
+
+        incoming_packet_handler(buffer, data_size);
+        // TODO: Not needed. Remove later.
+        // Now process the packet
         int status = process_packet(buffer , data_size);
-        if (status == 0) break;
+
+        // Add to queue after routing
+        memset(buffer, '\0', 65536);
     }
     close(sock_raw);
     printf("Finished");
@@ -68,8 +78,6 @@ int process_packet(unsigned char* buffer, int size)
     {
         case 1:  //ICMP Protocol
             ++icmp;
-            //print_icmp_packet( buffer , size);
-            //return 0;
             break;
 
         case 2:  //IGMP Protocol
@@ -78,13 +86,11 @@ int process_packet(unsigned char* buffer, int size)
 
         case 6:  //TCP Protocol
             ++tcp;
-            //print_tcp_packet(buffer , size);
             break;
 
         case 17: //UDP Protocol
             ++udp;
             return 0;
-            //print_udp_packet(buffer , size);
             break;
 
         default: //Some Other Protocol like ARP etc.
@@ -94,5 +100,4 @@ int process_packet(unsigned char* buffer, int size)
     fprintf(stdout, "TCP : %d   UDP : %d   ICMP : %d   IGMP : %d   Others : %d   Total : %d\r", tcp , udp , icmp , igmp , others , total);
     fflush(stdout);
     return 1;
-
 }

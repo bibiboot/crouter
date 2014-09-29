@@ -1,5 +1,5 @@
 #include "globals.h"
 
-int sniff(unsigned char *packet);
+int sniff();
 
 int process_packet(unsigned char* packet, int size);

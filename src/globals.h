@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <stdbool.h>
 #include <pthread.h>
+#include <linux/if_ether.h>
 
 #include "uthash.h"
 #include "config.h"
@@ -43,8 +44,9 @@ struct globals {
     struct config config;
     // Hashmap
     hashed_link *hashl;
+    int send_sock_fd;
+    unsigned char src_mac[ETH_ALEN];
+    unsigned char src_mac2[ETH_ALEN];
 };
 
 extern struct globals globals;
-
-unsigned int time_diff_micro(struct timeval end, struct timeval start);

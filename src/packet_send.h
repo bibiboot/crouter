@@ -5,4 +5,5 @@
 
 void send_ethernet_packet();
 
-void send_icmp_packet(char *if_name, unsigned char *dest_mac, void *packet);
+void send_packet_on_line(char *if_name, unsigned char *dest_mac,
+                         void *packet);

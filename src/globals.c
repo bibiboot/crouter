@@ -7,9 +7,3 @@ struct globals globals = {
     .hashl = NULL
 };
 
-/**
- * Calculates difference between two timeval.
- */
-unsigned int time_diff_micro(struct timeval end, struct timeval start){
-  return ((end.tv_sec - start.tv_sec) * 1000000) + (end.tv_usec - start.tv_usec);
-}

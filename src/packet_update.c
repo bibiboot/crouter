@@ -12,7 +12,7 @@
    |      Internet Header + 64 bits of Original Data Datagram      |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 **/
-void update_icmp_packet(unsigned char *packet, unsigned char *src_mac,
+void update_ethernet_packet(unsigned char *packet, unsigned char *src_mac,
                         unsigned char *dest_mac){
    /*pointer to ethenet header*/
     unsigned char* etherhead = packet;
@@ -43,11 +43,11 @@ void update_ip_packet(unsigned char *packet){
     }
 
     // Calculate the checksum
-    printf("\n  Before Calculation Checksum : %d\n",ntohs(iph->check));
+    //printf("\n  Before Calculation Checksum : %d\n",ntohs(iph->check));
     iph->check = cksum(packet + sizeof(struct ethhdr), iphdrlen);
-    printf("\n  After Calculation Checksum : %d\n",ntohs(iph->check));
+    //printf("\n  After Calculation Checksum : %d\n",ntohs(iph->check));
     if ( is_chksum_valid(packet + sizeof(struct ethhdr), iphdrlen) ) {
-        printf("CHECK SUM CORRECT\n");
+        //printf("CHECK SUM CORRECT\n");
     } else {
         printf("CHECK SUM NOT CORRECT\n");
     }
