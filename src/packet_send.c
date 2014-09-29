@@ -1,5 +1,9 @@
 #include "packet_send.h"
 
+/**
+ * Not used
+ * Stand alone function to send ethernet packet
+ */
 void send_ethernet_packet() {
     int s; /*socketdescriptor*/
     char if_name[IFNAMSIZ] = "inf001";

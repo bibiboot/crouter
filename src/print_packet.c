@@ -44,7 +44,7 @@ void print_mac(const char *addr)
     int i;
     for (i = 0; i < ETH_ALEN - 1; i++)
         printf("%02hhx:", addr[i]);
-    printf("%02hhx\n", addr[ETH_ALEN - 1]);
+    printf("%02hhx", addr[ETH_ALEN - 1]);
 }
 
 void print_ethernet_header(unsigned char* buffer, int size)

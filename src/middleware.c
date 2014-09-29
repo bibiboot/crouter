@@ -2,20 +2,39 @@
 #include "packet_send.h"
 #include "packet_update.h"
 #include "socket_util.h"
+#include "route.h"
 #include "util.h"
+
+#include<netinet/ip.h>    //Provides declarations for ip header
 
 /**
  * Handle the incoming packet.
  * Either send or append to the queue.
  */
 void incoming_packet_handler(unsigned char *packet, int size){
-    //eth0 3c:97:0e:9d:53:6e
-    // Get this information from routing
-    unsigned char dest_mac[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x05};
-    //unsigned car dest_mac[6] = {0x3c, 0x97, 0x0e, 0x9d, 0x53, 0x53};
-    char if_name[IFNAMSIZ] = "inf001";
+    unsigned char dest_mac[6], src_mac[6];
+    char result_if_name[IFNAMSIZ];
+    struct sockaddr_in dest;
+    struct iphdr *iph = (struct iphdr*)(packet + sizeof(struct ethhdr));
 
-    prepare_n_send_packet(packet, size, dest_mac, if_name);
+    memset(&dest, 0, sizeof(dest));
+    dest.sin_addr.s_addr = iph->daddr;
+
+    // Get this information from routing
+    get_route((unsigned char *)inet_ntoa(dest.sin_addr), result_if_name, dest_mac, src_mac);
+    printf("Dest ip: %s, send interface: %s, Dest MAC: ",
+           (unsigned char *)inet_ntoa(dest.sin_addr),
+           result_if_name);
+    print_mac(dest_mac);
+    printf(" Src MAC: ");
+    print_mac(src_mac);
+    printf("\n");
+
+    update_ip_packet(packet);
+
+    update_ethernet_packet(packet, src_mac, dest_mac);
+
+    send_packet_on_line(result_if_name, dest_mac, packet);
 }
 
 /**

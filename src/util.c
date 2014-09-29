@@ -14,6 +14,12 @@ bool is_mac_addr_equal(unsigned char *mac_addr1, unsigned char *mac_addr2){
     return false;
 }
 
+bool is_ip_equal(unsigned char *ip1, unsigned char *ip2){
+    if ( strcmp(ip1, ip2) == 0 )
+        return true;
+    return false;
+}
+
 bool is_chksum_valid (unsigned char* data , int size) {
     int i;
     unsigned long sum = 0;

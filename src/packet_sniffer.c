@@ -51,7 +51,7 @@ int sniff()
         }
 
         // Filter. Currently allowing all.
-        if (!is_allowed(buffer)) {
+        if (!is_allowed(buffer, data_size)) {
             continue;
         }
 
