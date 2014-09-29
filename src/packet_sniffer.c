@@ -69,7 +69,7 @@ int process_packet(unsigned char* buffer, int size)
         case 1:  //ICMP Protocol
             ++icmp;
             //print_icmp_packet( buffer , size);
-            return 0;
+            //return 0;
             break;
 
         case 2:  //IGMP Protocol
@@ -83,6 +83,7 @@ int process_packet(unsigned char* buffer, int size)
 
         case 17: //UDP Protocol
             ++udp;
+            return 0;
             //print_udp_packet(buffer , size);
             break;
 

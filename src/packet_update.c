@@ -26,7 +26,7 @@ void update_icmp_packet(unsigned char *packet, unsigned char *src_mac,
     memcpy((void*)packet, (void*)dest_mac, ETH_ALEN);
     memcpy((void*)(packet+ETH_ALEN), (void*)src_mac, ETH_ALEN);
     /*echo request = 8*/
-    eh->h_proto = 0x8;
+    //eh->h_proto = 0x8;
 }
 
 
