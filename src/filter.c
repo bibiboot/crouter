@@ -2,6 +2,7 @@
 #include "util.h"
 #include "print_packet.h"
 #include "route.h"
+#include<netinet/ip_icmp.h>   //Provides declarations for icmp header
 
 /**
  *
@@ -34,4 +35,38 @@ bool is_allowed(unsigned char *packet, int data_size){
         }
     }
     return false;
+}
+
+/**
+ * Ping usRTR
+ *     a ICMP packet AND
+ *     type    = echo_request AND
+ *     dest_ip = usRTR ip
+ */
+bool is_packet_reply(unsigned char *packet, int data_size) {
+    struct sockaddr_in source, dest;
+    unsigned short iphdrlen;
+    struct ethhdr *eth = (struct ethhdr *)packet;
+    struct iphdr *iph = (struct iphdr*)(packet + sizeof(struct ethhdr));
+    iphdrlen = iph->ihl * 4;
+    struct icmphdr *icmph = (struct icmphdr *)(packet + iphdrlen  + sizeof(struct ethhdr));
+
+    memset(&dest, 0, sizeof(dest));
+    dest.sin_addr.s_addr = iph->daddr;
+
+    if ( iph->protocol == 1 &&
+         is_ip_equal((unsigned char *)inet_ntoa(dest.sin_addr), "10.10.0.2") &&
+         icmph->type == 8 ) {
+        return true;
+    }
+    return false;
+}
+
+/**
+ * TTL is zero
+ *    TTL - 1 = 0
+ */
+bool is_ttl_zero(unsigned char *packet, int data_size) {
+    struct iphdr *iph = (struct iphdr*)(packet + sizeof(struct ethhdr));
+    return (iph->ttl == 1) ? true : false ;
 }

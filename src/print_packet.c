@@ -193,10 +193,10 @@ void print_icmp_packet(unsigned char* buffer , int size)
     fprintf(LOGFILE , "\n");
 
     fprintf(LOGFILE , "IP Header\n");
-    print_data_detail(buffer,iphdrlen);
+    print_data_detail(buffer+sizeof(struct ethhdr) ,iphdrlen);
 
-    fprintf(LOGFILE , "UDP Header\n");
-    print_data_detail(buffer + iphdrlen , sizeof icmph);
+    fprintf(LOGFILE , "ICMP Header\n");
+    print_data_detail(buffer+sizeof(struct ethhdr) + iphdrlen , sizeof icmph);
 
     fprintf(LOGFILE , "Data Payload\n");
 

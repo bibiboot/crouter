@@ -12,3 +12,5 @@ bool is_chksum_valid (unsigned char* data , int size);
 
 unsigned short cksum (unsigned char* data , int size);
 
+unsigned short cksum_icmp (unsigned char* data , int size);
+

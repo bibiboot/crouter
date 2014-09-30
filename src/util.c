@@ -55,6 +55,27 @@ unsigned short cksum (unsigned char* data , int size) {
     return chk;
 }
 
+unsigned short cksum_icmp (unsigned char* data , int size) {
+
+    int i;
+    unsigned long sum = 0;
+    unsigned short *data_t = (unsigned short*)data;
+
+    for(i=0 ; i < size/2 ; i++) {
+        //if(i==3) continue;
+        //fprintf(LOGFILE , " %04X",(unsigned int)data_t[i]);
+        sum += data_t[i];
+        //fprintf(LOGFILE , "(%04lx)", sum);;
+    }
+
+    sum = (sum & 0xffff) + (sum >> 16);
+    //printf("\nFinal = (%04lx)\n", ~sum);
+    unsigned short chk = (unsigned short)(~sum);
+    //printf("\nBY HAND CHEKSUM = %d\n", ntohs(chk));
+    return chk;
+}
+
+
 /**
  * Calculates difference between two timeval.
  */

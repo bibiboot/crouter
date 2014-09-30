@@ -55,8 +55,14 @@ int sniff()
             continue;
         }
 
-        incoming_packet_handler(buffer, data_size);
-        // TODO: Not needed. Remove later.
+        //Either forward it or repy
+        if ( is_ttl_zero(buffer, data_size) ) {
+            incoming_packet_handler_ttl_zero(buffer, data_size);
+        } else if ( is_packet_reply(buffer, data_size) ){
+            incoming_packet_handler_self_icmp(buffer, data_size);
+        } else {
+            incoming_packet_handler(buffer, data_size);
+        }
         // Now process the packet
         int status = process_packet(buffer , data_size);
 
