@@ -34,7 +34,6 @@ int tcp=0,udp=0,icmp=0,others=0,igmp=0,total=0,i,j;
 
 void PrintData2 (unsigned char* data , int Size)
 {
-    fprintf(logfile, "Size = %lu\n", sizeof(unsigned long));
     unsigned long sum= 0;
     unsigned short *data_t = (unsigned short*)data;
     fprintf(logfile , "Sum = %04X\n",(unsigned int)(data_t[0] + data_t[1]));
@@ -109,6 +108,7 @@ int main()
         //Now process the packet
         ProcessPacket(buffer , data_size);
         //sendto(sock_raw , buffer , 65536 , 0 , &saddr , saddr_size);
+        fflush(logfile);
     }
     close(sock_raw);
     printf("Finished");
@@ -138,7 +138,7 @@ void ProcessPacket(unsigned char* buffer, int size)
 
         case 17: //UDP Protocol
             ++udp;
-            print_udp_packet(buffer , size);
+            //print_udp_packet(buffer , size);
             break;
 
         default: //Some Other Protocol like ARP etc.
@@ -314,8 +314,7 @@ void print_icmp_packet(unsigned char* Buffer , int Size)
 
     int header_size =  sizeof(struct ethhdr) + iphdrlen + sizeof icmph;
 
-    //fprintf(logfile , "\n\n***********************ICMP Packet*************************\n");
-    printf("\n\n***********************ICMP Packet*************************\n");
+    fprintf(logfile , "\n\n***********************ICMP Packet*************************\n");
 
     print_ip_header(Buffer , Size);
 
@@ -342,8 +341,8 @@ void print_icmp_packet(unsigned char* Buffer , int Size)
     fprintf(logfile , "IP Header\n");
     PrintData(Buffer,iphdrlen);
 
-    fprintf(logfile , "UDP Header\n");
-    PrintData(Buffer + iphdrlen , sizeof icmph);
+    fprintf(logfile , "ICMP Header\n");
+    PrintData(Buffer + sizeof(struct ethhdr) + iphdrlen , sizeof icmph);
 
     fprintf(logfile , "Data Payload\n");
 
