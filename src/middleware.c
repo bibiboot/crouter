@@ -35,9 +35,10 @@ void incoming_packet_handler_ttl_zero(unsigned char *packet, int size) {
     // Reply back to the source mac address
     update_ethernet_packet_reply(packet);
 
+    update_icmp_packet_reply(packet, size);
+
     update_ip_packet_reply(packet);
 
-    update_icmp_packet_reply(packet);
 
     send_packet_on_line(result_if_name, dest_mac, packet);
 
@@ -85,7 +86,7 @@ void incoming_packet_handler_self_icmp(unsigned char *packet, int size){
 
     update_ip_packet_reply(packet);
 
-    update_icmp_packet_reply(packet);
+    update_icmp_packet_reply(packet, size);
 
     send_packet_on_line(result_if_name, dest_mac, packet);
 

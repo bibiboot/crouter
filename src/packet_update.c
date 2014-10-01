@@ -1,19 +1,8 @@
 #include "packet_update.h"
-#include "util.h"
-#include "print_packet.h"
-#include<netinet/ip.h>    //Provides declarations for ip header
-#include<netinet/ip_icmp.h>   //Provides declarations for icmp header
+
 /**
-   0                   1                   2                   3
-    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   |     Type      |     Code      |          Checksum             |
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   |                             unused                            |
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   |      Internet Header + 64 bits of Original Data Datagram      |
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-**/
+ * Used for forwarding packet
+ */
 void update_ethernet_packet(unsigned char *packet, unsigned char *src_mac,
                         unsigned char *dest_mac){
    /*pointer to ethenet header*/
@@ -32,6 +21,32 @@ void update_ethernet_packet(unsigned char *packet, unsigned char *src_mac,
     //eh->h_proto = 0x8;
 }
 
+/**
+ * Decrement the TTL and update the checksum
+ * If the new checksum is wrong it will be
+ * detectec here.
+ */
+void update_ip_packet(unsigned char *packet){
+    unsigned short iphdrlen;
+    struct iphdr *iph = (struct iphdr *)(packet  + sizeof(struct ethhdr) );
+    unsigned int ttl = (unsigned int)iph->ttl;
+    iphdrlen = iph->ihl*4;
+    iph->ttl = ttl - 1;
+
+    //printf("\n  Before Calculation Checksum : %d\n",ntohs(iph->check));
+    iph->check = cksum(packet + sizeof(struct ethhdr), iphdrlen);
+    //printf("\n  After Calculation Checksum : %d\n",ntohs(iph->check));
+    if ( is_chksum_valid(packet + sizeof(struct ethhdr), iphdrlen) ) {
+        //printf("CHECK SUM CORRECT\n");
+    } else {
+        printf("CHECK SUM NOT CORRECT\n");
+    }
+}
+
+/**
+ * Swap the source and destination MAC address
+ * As you need to send it back.
+ */
 void update_ethernet_packet_reply(unsigned char *packet){
     /*another pointer to ethernet header*/
     struct ethhdr *eh = (struct ethhdr *)packet;
@@ -46,28 +61,29 @@ void update_ethernet_packet_reply(unsigned char *packet){
 }
 
 /**
+ * Update the icmp in case of ping reply
  * Change the icmp type
  * Echo request  = 8
  * Echo reply    = 0
  * Time Exceeded = 11
  * Change the checksum
  */
-void update_icmp_packet_reply(unsigned char *packet){
-
-    unsigned short iphdrlen;
+void update_icmp_packet_reply(unsigned char *packet, int data_size){
     struct iphdr *iph = (struct iphdr *)(packet  + sizeof(struct ethhdr));
-    iphdrlen = iph->ihl * 4;
-
+    unsigned short iphdrlen = iph->ihl * 4;
+    int header_size = sizeof(struct ethhdr) + iphdrlen + sizeof(struct icmphdr);
     struct icmphdr *icmph = (struct icmphdr *)(packet + iphdrlen  + sizeof(struct ethhdr));
-    //icmph->type = ICMP_ECHOREPLY;
-    icmph->type = 11;
 
-    // Calculate the checksum
-    //printf("\n  ICMP: Before Calculation Checksum : %d\n",ntohs(icmph->checksum));
+    icmph->type = ICMP_ECHOREPLY;
+
+    int payload_size = data_size - header_size;
     icmph->checksum = 0;
-    icmph->checksum = cksum_icmp(packet + sizeof(struct ethhdr) + iphdrlen, sizeof(struct icmphdr));
+    icmph->checksum = cksum_icmp(packet + sizeof(struct ethhdr) + iphdrlen,
+                                 sizeof(struct icmphdr) + payload_size);
     //printf("\n  ICMP: After Calculation Checksum : %d\n",ntohs(icmph->checksum));
-    if ( is_chksum_valid(packet + sizeof(struct ethhdr) + iphdrlen, sizeof(struct icmphdr)) ) {
+
+    if ( is_chksum_valid(packet + sizeof(struct ethhdr) + iphdrlen,
+                         sizeof(struct icmphdr)) + payload_size ) {
         //printf("CHECK SUM CORRECT\n");
     } else {
         printf("CHECK SUM NOT CORRECT\n");
@@ -99,17 +115,70 @@ void update_ip_packet_reply(unsigned char *packet){
     }
 }
 
-// Decrement the ttl
-void update_ip_packet(unsigned char *packet){
-    unsigned short iphdrlen;
+
+/**
+   0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |     Type      |     Code      |          Checksum             |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                             unused                            |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |      Internet Header + 64 bits of Original Data Datagram      |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+**/
+/**
+ * Updae the icmp packet in case of
+ * time exceeded packe to be send
+ */
+void update_icmp_packet_time_exc_reply(unsigned char *packet, int data_size){
+
+    struct iphdr *iph = (struct iphdr *)(packet  + sizeof(struct ethhdr));
+    unsigned short iphdrlen = iph->ihl * 4;
+    int header_size = sizeof(struct ethhdr) + iphdrlen + sizeof(struct icmphdr);
+    struct icmphdr *icmph = (struct icmphdr *)(packet + iphdrlen  + sizeof(struct ethhdr));
+
+    int payload_size = data_size - header_size;
+
+    // Get ipheader + icmpheader + payload of the echo request
+    // Append them after icmpheader
+    memcpy(packet + sizeof(struct ethhdr) + iphdrlen + sizeof(icmph),
+           packet + sizeof(struct ethhdr) , iphdrlen + sizeof (struct icmphdr) + payload_size);
+
+    icmph->type = 11;
+
+    // Calculate the checksum
+    printf("\n  ICMP: Before Calculation Checksum : %d\n",ntohs(icmph->checksum));
+    icmph->checksum = 0;
+    printf("PAYLOAD SIZE = %d\n", payload_size);
+
+    icmph->checksum = in_cksum((unsigned short*)(packet + sizeof(struct ethhdr) + iphdrlen), sizeof(struct icmphdr) + payload_size);
+
+    if ( is_chksum_valid(packet + sizeof(struct ethhdr) + iphdrlen, sizeof(struct icmphdr)) + payload_size ) {
+        //printf("CHECK SUM CORRECT\n");
+    } else {
+        printf("CHECK SUM NOT CORRECT\n");
+    }
+    print_icmp_packet(packet, data_size);
+}
+
+/**
+ * Update the ip in case of ICMP time exceeded
+ * Allocate fresh set of TTL i.e. 64
+ * Put the routers's ip as source ip
+ * Destination ip is the old source ip
+ * Recalculate the checksum
+ */
+void update_ip_packet_time_exc_reply(unsigned char *packet){
     struct iphdr *iph = (struct iphdr *)(packet  + sizeof(struct ethhdr) );
     unsigned int ttl = (unsigned int)iph->ttl;
-    iphdrlen = iph->ihl*4;
-    iph->ttl = ttl - 1;
+    unsigned short iphdrlen = iph->ihl*4;
+    iph->ttl = 64;
 
-    if( iph->ttl == 0 ) {
-        printf("\n SEND ICMP packet for Time Exceeded \n");
-    }
+    unsigned long src_ip = iph->saddr;
+    unsigned long dest_ip = iph->daddr;
+    iph->saddr = dest_ip;
+    iph->daddr = src_ip;
 
     // Calculate the checksum
     //printf("\n  Before Calculation Checksum : %d\n",ntohs(iph->check));

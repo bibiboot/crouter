@@ -30,7 +30,6 @@ unsigned short csum(unsigned short *buf, int len)
         return (unsigned short)(~sum);
 }
 
-
 void print_data (unsigned char* data , int size)
 {
     int i;
@@ -60,15 +59,6 @@ void print_ethernet_header(unsigned char* buffer, int size)
             eth->h_source[0] , eth->h_source[1] , eth->h_source[2] ,
             eth->h_source[3] , eth->h_source[4] , eth->h_source[5] );
     fprintf(LOGFILE , "   |-Protocol            : %u \n",(unsigned short)eth->h_proto);
-    /*
-    eth->h_source[0] =  eth->h_dest[0];
-    eth->h_source[1] =  eth->h_dest[1];
-    eth->h_source[2] =  eth->h_dest[2];
-    eth->h_source[3] =  eth->h_dest[3];
-    eth->h_source[4] =  eth->h_dest[4];
-    eth->h_source[5] =  eth->h_dest[5];
-    fprintf(LOGFILE , "   |-Source Address      : %.2X-%.2X-%.2X-%.2X-%.2X-%.2X \n", eth->h_source[0] , eth->h_source[1] , eth->h_source[2] , eth->h_source[3] , eth->h_source[4] , eth->h_source[5] );
-    */
 }
 
 void print_ip_header(unsigned char* buffer, int size)
@@ -106,12 +96,10 @@ void print_ip_header(unsigned char* buffer, int size)
     // Calculate the checksum
     unsigned short chk = csum((unsigned short*)buffer, sizeof(struct iphdr) + sizeof(struct udphdr));
     fprintf(LOGFILE , "   |-Calculated   : %d\n", chk);
-
 }
 
 void print_udp_packet(unsigned char *buffer , int size)
 {
-
     unsigned short iphdrlen;
 
     struct iphdr *iph = (struct iphdr *)(buffer +  sizeof(struct ethhdr));
@@ -120,7 +108,6 @@ void print_udp_packet(unsigned char *buffer , int size)
     struct udphdr *udph = (struct udphdr*)(buffer + iphdrlen  + sizeof(struct ethhdr));
 
     int header_size =  sizeof(struct ethhdr) + iphdrlen + sizeof udph;
-    //int header_size =  sizeof(struct ethhdr) + iphdrlen + sizeof(struct udphdr);
 
     fprintf(LOGFILE , "\n\n***********************UDP Packet*************************\n");
 

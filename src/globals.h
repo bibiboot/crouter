@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <stdbool.h>
+#include <string.h>
 #include <pthread.h>
 #include <linux/if_ether.h>
 
@@ -20,24 +21,16 @@
 
 FILE *LOGFILE;
 
-typedef long long unsigned int vlong;
-
 // Hashmap data structure
 typedef struct hashl {
-    // Sequence number
-    vlong seq_num;
     // Address of the node in list.
+    int seq_num;
     UT_hash_handle hh;
 } hashed_link;
 
-// Data list is stored as node below
-// Both nack and data list have same type of node
 struct node {
-    vlong seq_num;
     // Its pointing to the start address of data
     char *mem_ptr;
-    // Size in bits
-    vlong size;
 };
 
 struct globals {

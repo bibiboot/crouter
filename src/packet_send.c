@@ -43,6 +43,10 @@ void send_ethernet_packet() {
     }
 }
 
+/**
+ * Send packet actually
+ * Creates the socket address
+ */
 void send_packet_on_line(char *if_name, unsigned char *dest_mac, void *packet){
     struct ifreq ifr;
     /*target address*/

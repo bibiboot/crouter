@@ -35,6 +35,7 @@ bool is_chksum_valid (unsigned char* data , int size) {
     return false;
 }
 
+/* Checksum for ip layer */
 unsigned short cksum (unsigned char* data , int size) {
 
     int i;
@@ -75,6 +76,34 @@ unsigned short cksum_icmp (unsigned char* data , int size) {
     return chk;
 }
 
+/*
+ *  Function calculate checksum
+ *  Used for time exceeded icmp packet
+ */
+unsigned short in_cksum(unsigned short *ptr, int nbytes)
+{
+    register long sum;
+    u_short oddbyte;
+    register u_short answer;
+
+    sum = 0;
+    while (nbytes > 1) {
+        sum += *ptr++;
+        nbytes -= 2;
+    }
+
+    if (nbytes == 1) {
+        oddbyte = 0;
+        *((u_char *) & oddbyte) = *(u_char *) ptr;
+        sum += oddbyte;
+    }
+
+    sum = (sum >> 16) + (sum & 0xffff);
+    sum += (sum >> 16);
+    answer = ~sum;
+
+    return (answer);
+}
 
 /**
  * Calculates difference between two timeval.

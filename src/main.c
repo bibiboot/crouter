@@ -4,23 +4,20 @@
 
 int main(int argc, char *argv[]){
 
-    char if_name[IFNAMSIZ] = "inf001";
-
+    /* Create file descriptor to write the packet */
     create_log_file();
 
+    /* Descriptor used for sending packets */
     globals.send_sock_fd = get_socket();
 
-    interface_addr(globals.send_sock_fd, if_name, globals.src_mac);
+    /**
+     * Router's interfaces and its mac addresss
+     * Needed to sniff only certain interfaces
+     */
+    interface_addr(globals.send_sock_fd, "inf001", globals.src_mac);
     interface_addr(globals.send_sock_fd, "inf000", globals.src_mac2);
 
     sniff();
 
-    printf("SUCCESS\n");
     return 0;
-}
-
-void start(){
-    //void *val;
-    //pthread_create(&globals.sen_th, 0, reciever, val);
-    //pthread_create(&globals.rev_th, 0, sender, val);
 }
