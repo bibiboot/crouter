@@ -1,58 +1,68 @@
 #include "route.h"
 
 /**
- * Rules
- *     If dest_ip is node0 ( 10.10.0.1 )
- *         Interface = inf000
- *         dest_mac  = 00:00:00:00:0B
- *         src_mac   = 00:00:00:00:01
- *     If dest_ip is node5 ( 10.1.2.3 )
- *         Interface = inf001
- *         dest_mac  = 00:00:00:00:05
- *         src_mac   = 00:00:00:00:02
- *     If dest_ip is rtr2 ( 10.99.0.2 )
- *         Interface = inf001
- *         dest_mac  = 00:00:00:00:05
- *         src_mac   = 00:00:00:00:02
- *     If dest_ip is usRTR ( 10.10.0.2 )
- *         Interface = inf000
- *         dest_mac  = 00:00:00:00:0B
- *         src_mac   = 00:00:00:00:01
- *     If dest_ip is usRTR ( 10.99.0.3 ) NOT USED
- *         Interface = inf001
- *         dest_mac  = 00:00:00:00:05
- *         src_mac   = 00:00:00:00:02
- *
+ * Network | Dest ip | Interface |
+ * Key value pair system
+ * Key   = Network
+ * Value = Complete router entry
  */
-void get_route(unsigned char *dest_ip,
-               char *result_if_name, char *dest_mac,
-               char *src_mac){
-    if (is_ip_equal(dest_ip, "10.10.0.1") ||
-        is_ip_equal(dest_ip, "10.10.0.2")) {
+void init_route_table() {
+
+
+}
+
+void lookup_router_table() {
+
+}
+
+void get_new_route(uint32_t dest_ip,
+                   char *result_if_name, char *dest_mac,
+                   char *src_mac){
+
+    // MAC Address required
+    // eth1, eth2, eth3, rtr1, rtr2, node3, node4
+
+    // Get Network id
+    uint32_t network_type1 = dest_ip & (globals.mask_255_255_255_0).s_addr;
+    uint32_t network_type2 = dest_ip & (globals.mask_255_0_0_0).s_addr;
+
+    char rtr1_mac[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x04};
+    char rtr2_mac[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x08};
+    char node3_mac[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x02};
+    char node4_mac[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x06};
+
+    /*
+    printf("Network -1 :");
+    print_ip(network_type1);
+    printf("Network -2 :");
+    print_ip(network_type2);
+    printf("\n");
+    */
+
+    if (network_type1 == globals.sock_network_LAN1.s_addr) {
 
         strcpy(result_if_name, "inf000");
-        char test_mac[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x0B};
-        char test_mac2[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
-        memcpy(dest_mac, test_mac, 6);
-        memcpy(src_mac, test_mac2, 6);
+        // Check dest ip and choose mac address
+        // TODO This works only for node4
+        memcpy(dest_mac, node4_mac, 6);
+        memcpy(src_mac, globals.eth1_mac, 6);
 
-    } else if (is_ip_equal(dest_ip, "10.1.2.3")){
+    } else if (network_type1 == globals.sock_network_rtr2.s_addr) {
 
-        strcpy(result_if_name, "inf001");
-        char test_mac[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x05};
-        char test_mac2[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x02};
-        memcpy(dest_mac, test_mac, 6);
-        memcpy(src_mac, test_mac2, 6);
+        strcpy(result_if_name, "inf002");
+        memcpy(dest_mac, rtr2_mac, 6);
+        memcpy(src_mac, globals.eth3_mac, 6);
 
-    } else if (is_ip_equal(dest_ip, "10.99.0.2")){
+    } else if (network_type2 == globals.sock_network_LAN0.s_addr) {
 
         strcpy(result_if_name, "inf001");
-        char test_mac[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x05};
-        char test_mac2[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x02};
-        memcpy(dest_mac, test_mac, 6);
-        memcpy(src_mac, test_mac2, 6);
+        memcpy(dest_mac, rtr1_mac, 6);
+        memcpy(src_mac, globals.eth2_mac, 6);
 
     } else {
-        printf("No entry found for dest: %s\n", dest_ip);
+
+        printf("No entry found : network ip:");
+        print_ip(dest_ip);
+        printf("\n");
     }
 }

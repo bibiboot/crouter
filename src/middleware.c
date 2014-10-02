@@ -2,14 +2,13 @@
 #include "packet_send.h"
 #include "packet_update.h"
 #include "print_packet.h"
-#include "socket_util.h"
 #include "route.h"
+#include "socket_util.h"
 #include "util.h"
-
-#include<netinet/ip.h>    //Provides declarations for ip header
 
 void incoming_packet_handler_ttl_zero(unsigned char *packet, int size) {
     print_icmp_packet(packet, size);
+
     unsigned char dest_mac[6], src_mac[6];
     char result_if_name[IFNAMSIZ];
     struct sockaddr_in dest;
@@ -22,28 +21,31 @@ void incoming_packet_handler_ttl_zero(unsigned char *packet, int size) {
     memset(&dest, 0, sizeof(dest));
     dest.sin_addr.s_addr = iph->daddr;
 
-    // Get this information from routing
-    get_route((unsigned char *)inet_ntoa(dest.sin_addr), result_if_name, dest_mac, src_mac);
-    printf("Dest ip: %s, send interface: %s, Dest MAC: ",
-           (unsigned char *)inet_ntoa(dest.sin_addr),
-           result_if_name);
-    print_mac(dest_mac);
-    printf(" Src MAC: ");
-    print_mac(src_mac);
-    printf("\n");
+    // Routing
+    get_new_route(iph->saddr, result_if_name, dest_mac, src_mac);
+
+    print_routed_packet(dest, result_if_name, src_mac, dest_mac);
+
+    int new_packet_size = get_resize_icmp_packet_time_exc_reply(packet,size);
+    printf("Old size = %d and New size = %d\n", size, new_packet_size);
+
+    unsigned char *new_packet = malloc(new_packet_size);
+
+    //Copy the whole old packet to the new packet
+    memcpy(new_packet, packet, size);
 
     // Reply back to the source mac address
-    update_ethernet_packet_reply(packet);
+    update_ethernet_packet_reply(new_packet);
 
-    update_icmp_packet_reply(packet, size);
+    update_icmp_packet_time_exc_reply(new_packet, size);
 
-    update_ip_packet_reply(packet);
+    update_ip_packet_time_exc_reply(new_packet);
 
+    send_packet_on_line(result_if_name, dest_mac, new_packet, new_packet_size);
 
-    send_packet_on_line(result_if_name, dest_mac, packet);
+    print_icmp_packet(new_packet, new_packet_size);
 
-    print_icmp_packet(packet, size);
-    fflush(LOGFILE);
+    free(new_packet);
 }
 
 /**
@@ -61,7 +63,6 @@ void incoming_packet_handler_ttl_zero(unsigned char *packet, int size) {
  *     checksum
  */
 void incoming_packet_handler_self_icmp(unsigned char *packet, int size){
-    print_icmp_packet(packet, size);
 
     unsigned char dest_mac[6], src_mac[6];
     char result_if_name[IFNAMSIZ];
@@ -71,15 +72,10 @@ void incoming_packet_handler_self_icmp(unsigned char *packet, int size){
     memset(&dest, 0, sizeof(dest));
     dest.sin_addr.s_addr = iph->daddr;
 
-    // Get this information from routing
-    get_route((unsigned char *)inet_ntoa(dest.sin_addr), result_if_name, dest_mac, src_mac);
-    printf("Dest ip: %s, send interface: %s, Dest MAC: ",
-           (unsigned char *)inet_ntoa(dest.sin_addr),
-           result_if_name);
-    print_mac(dest_mac);
-    printf(" Src MAC: ");
-    print_mac(src_mac);
-    printf("\n");
+    // Routing
+    get_new_route(iph->saddr, result_if_name, dest_mac, src_mac);
+
+    print_routed_packet(dest, result_if_name, src_mac, dest_mac);
 
     // Reply back to the source mac address
     update_ethernet_packet_reply(packet);
@@ -88,9 +84,8 @@ void incoming_packet_handler_self_icmp(unsigned char *packet, int size){
 
     update_icmp_packet_reply(packet, size);
 
-    send_packet_on_line(result_if_name, dest_mac, packet);
+    send_packet_on_line(result_if_name, dest_mac, packet, size);
 
-    print_icmp_packet(packet, size);
     fflush(LOGFILE);
 }
 
@@ -99,6 +94,8 @@ void incoming_packet_handler_self_icmp(unsigned char *packet, int size){
  * Either send or append to the queue.
  */
 void incoming_packet_handler(unsigned char *packet, int size){
+    print_udp_packet(packet, size);
+
     unsigned char dest_mac[6], src_mac[6];
     char result_if_name[IFNAMSIZ];
     struct sockaddr_in dest;
@@ -107,34 +104,32 @@ void incoming_packet_handler(unsigned char *packet, int size){
     memset(&dest, 0, sizeof(dest));
     dest.sin_addr.s_addr = iph->daddr;
 
-    // Get this information from routing
-    get_route((unsigned char *)inet_ntoa(dest.sin_addr), result_if_name, dest_mac, src_mac);
-    printf("Dest ip: %s, send interface: %s, Dest MAC: ",
-           (unsigned char *)inet_ntoa(dest.sin_addr),
-           result_if_name);
-    print_mac(dest_mac);
-    printf(" Src MAC: ");
-    print_mac(src_mac);
-    printf("\n");
+    // Routing
+    get_new_route(iph->daddr, result_if_name, dest_mac, src_mac);
+
+    print_routed_packet(dest, result_if_name, src_mac, dest_mac);
 
     update_ip_packet(packet);
 
     update_ethernet_packet(packet, src_mac, dest_mac);
 
-    send_packet_on_line(result_if_name, dest_mac, packet);
+    send_packet_on_line(result_if_name, dest_mac, packet, size);
+
+    print_udp_packet(packet, size);
 }
 
 /**
  * Prepare packet
  * Change ip and ethernet header
  * Send packet on line
+ * Deprecated ********************************* Deprecated
  */
 void prepare_n_send_packet(unsigned char *packet, int size,
                            unsigned char *dest_mac, char *if_name){
 
     update_ip_packet(packet);
 
-    update_ethernet_packet(packet, globals.src_mac, dest_mac);
+    update_ethernet_packet(packet, globals.eth1_mac, dest_mac);
 
-    send_packet_on_line(if_name, dest_mac, packet);
+    send_packet_on_line(if_name, dest_mac, packet, size);
 }

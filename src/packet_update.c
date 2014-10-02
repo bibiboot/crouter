@@ -115,6 +115,27 @@ void update_ip_packet_reply(unsigned char *packet){
     }
 }
 
+/**
+ * Calculate the new packet size
+ * as the new payload = old payload + icmp header + ip header
+ */
+int get_resize_icmp_packet_time_exc_reply(unsigned char *packet, int packet_size) {
+    struct iphdr *iph = (struct iphdr *)(packet  + sizeof(struct ethhdr));
+    unsigned short iphdrlen = iph->ihl * 4;
+    int header_size = sizeof(struct ethhdr) + iphdrlen + sizeof(struct icmphdr);
+    struct icmphdr *icmph = (struct icmphdr *)(packet + iphdrlen  + sizeof(struct ethhdr));
+
+    int payload_size = packet_size - header_size;
+
+    /*printf("ETH size = %d, IPH size = %d, ICMPH size = %d, Old payload size = %d\n",
+            sizeof(struct ethhdr), iphdrlen, sizeof(struct icmphdr), payload_size);
+    */
+
+    int new_payload_size = payload_size + sizeof(struct icmphdr) + iphdrlen;
+
+    return new_payload_size + sizeof(struct icmphdr) + iphdrlen + sizeof(struct ethhdr);
+}
+
 
 /**
    0                   1                   2                   3
@@ -142,24 +163,24 @@ void update_icmp_packet_time_exc_reply(unsigned char *packet, int data_size){
 
     // Get ipheader + icmpheader + payload of the echo request
     // Append them after icmpheader
-    memcpy(packet + sizeof(struct ethhdr) + iphdrlen + sizeof(icmph),
+    memmove(packet + sizeof(struct ethhdr) + iphdrlen + sizeof(struct icmphdr),
            packet + sizeof(struct ethhdr) , iphdrlen + sizeof (struct icmphdr) + payload_size);
 
     icmph->type = 11;
 
     // Calculate the checksum
-    printf("\n  ICMP: Before Calculation Checksum : %d\n",ntohs(icmph->checksum));
+    //printf("\n  ICMP: Before Calculation Checksum : %d\n",ntohs(icmph->checksum));
     icmph->checksum = 0;
-    printf("PAYLOAD SIZE = %d\n", payload_size);
+    //printf("PAYLOAD SIZE = %d\n", payload_size);
 
     icmph->checksum = in_cksum((unsigned short*)(packet + sizeof(struct ethhdr) + iphdrlen), sizeof(struct icmphdr) + payload_size);
 
-    if ( is_chksum_valid(packet + sizeof(struct ethhdr) + iphdrlen, sizeof(struct icmphdr)) + payload_size ) {
+    if ( is_chksum_valid(packet + sizeof(struct ethhdr) + iphdrlen, sizeof(struct icmphdr)) + payload_size + iphdrlen + sizeof(struct icmphdr) ) {
         //printf("CHECK SUM CORRECT\n");
     } else {
         printf("CHECK SUM NOT CORRECT\n");
     }
-    print_icmp_packet(packet, data_size);
+    //print_icmp_packet(packet, data_size + iphdrlen + sizeof(struct icmphdr));
 }
 
 /**
@@ -169,16 +190,23 @@ void update_icmp_packet_time_exc_reply(unsigned char *packet, int data_size){
  * Destination ip is the old source ip
  * Recalculate the checksum
  */
-void update_ip_packet_time_exc_reply(unsigned char *packet){
+void update_ip_packet_time_exc_reply(unsigned char *packet, int packet_size){
     struct iphdr *iph = (struct iphdr *)(packet  + sizeof(struct ethhdr) );
     unsigned int ttl = (unsigned int)iph->ttl;
     unsigned short iphdrlen = iph->ihl*4;
+    struct icmphdr *icmph = (struct icmphdr *)(packet + iphdrlen  + sizeof(struct ethhdr));
+    int payload_size = packet_size - sizeof(struct ethhdr) + sizeof(iph) + sizeof(icmph);
     iph->ttl = 64;
 
     unsigned long src_ip = iph->saddr;
     unsigned long dest_ip = iph->daddr;
     iph->saddr = dest_ip;
     iph->daddr = src_ip;
+
+    // Change total length
+    // IP Header + ICMP Header + New payload
+    iph->tot_len = iphdrlen + sizeof(icmph) + payload_size;
+    //fprintf(LOGFILE , "   |-Got IP Total Length   : %d  Bytes(size of Packet)\n",ntohs(iph->tot_len));
 
     // Calculate the checksum
     //printf("\n  Before Calculation Checksum : %d\n",ntohs(iph->check));

@@ -20,7 +20,7 @@ void update_ip_packet_reply(unsigned char *packet);
 void update_icmp_packet_reply(unsigned char *packet,
                               int data_size);
 
-void update_ip_packet_time_exc_reply(unsigned char *packet);
-
 void update_icmp_packet_time_exc_reply(unsigned char *packet,
                                        int data_size);
+
+int get_resize_icmp_packet_time_exc_reply(unsigned char *packet, int packet_size);

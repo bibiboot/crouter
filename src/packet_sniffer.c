@@ -7,6 +7,7 @@ void sniff()
     int saddr_size , data_size;
     struct sockaddr saddr;
     unsigned char *buffer = (unsigned char *) malloc(65536); //Its Big!
+    memset(buffer, '\0', 65536);
 
     printf("Starting...\n");
 
@@ -49,7 +50,8 @@ void sniff()
         int status = process_packet(buffer , data_size);
 
         //TODO Check if needed
-        //memset(buffer, '\0', 65536);
+        memset(buffer, '\0', 65536);
+        fflush(LOGFILE);
     }
 
     close(sock_raw);

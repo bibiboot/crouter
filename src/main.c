@@ -2,7 +2,60 @@
 #include "socket_util.h"
 #include "util.h"
 
+/**
+ * Create mask
+ * 255.255.255.0 | 255.0.0.0
+ * in the uint_32 format so that it can be
+ * masked later.
+ */
+void init_mask(){
+    char *mask = "255.255.255.0";
+    memset(&(globals.mask_255_255_255_0), 0,
+            sizeof(globals.mask_255_255_255_0));
+    inet_aton(mask, &(globals.mask_255_255_255_0));
+
+    char *mask2 = "255.0.0.0";
+    memset(&(globals.mask_255_0_0_0), 0,
+            sizeof(globals.mask_255_255_255_0));
+    inet_aton(mask2, &(globals.mask_255_0_0_0));
+}
+
+void init_network_id() {
+    char *network_LAN0 = "10.0.0.0";
+    char *network_LAN1 = "10.1.2.0";
+    char *network_rtr1 = "10.10.1.0";
+    char *network_rtr2 = "10.10.3.0";
+
+    memset(&globals.sock_network_LAN0, 0, sizeof(struct in_addr));
+    memset(&globals.sock_network_LAN1, 0, sizeof(struct in_addr));
+    memset(&globals.sock_network_rtr1, 0, sizeof(struct in_addr));
+    memset(&globals.sock_network_rtr2, 0, sizeof(struct in_addr));
+
+    inet_aton(network_LAN0, &(globals.sock_network_LAN0));
+    inet_aton(network_LAN1, &(globals.sock_network_LAN1));
+    inet_aton(network_rtr1, &(globals.sock_network_rtr1));
+    inet_aton(network_rtr2, &(globals.sock_network_rtr2));
+}
+
+/**
+ * Router's interfaces and its mac addresss
+ * Needed to sniff only certain interfaces
+ */
+void init_mac_addr(){
+
+    interface_addr(globals.send_sock_fd, "inf000", globals.eth1_mac);
+    interface_addr(globals.send_sock_fd, "inf001", globals.eth2_mac);
+    interface_addr(globals.send_sock_fd, "inf002", globals.eth3_mac);
+
+}
+
 int main(int argc, char *argv[]){
+
+    /* Initialize the two mask as uint_32 */
+    init_mask();
+
+    /* Initiliaze all the network ids in the topo as sock */
+    init_network_id();
 
     /* Create file descriptor to write the packet */
     create_log_file();
@@ -10,12 +63,8 @@ int main(int argc, char *argv[]){
     /* Descriptor used for sending packets */
     globals.send_sock_fd = get_socket();
 
-    /**
-     * Router's interfaces and its mac addresss
-     * Needed to sniff only certain interfaces
-     */
-    interface_addr(globals.send_sock_fd, "inf001", globals.src_mac);
-    interface_addr(globals.send_sock_fd, "inf000", globals.src_mac2);
+    /* Get MAC address of all the three interfaces */
+    init_mac_addr();
 
     sniff();
 

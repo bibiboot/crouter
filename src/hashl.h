@@ -2,6 +2,6 @@
 
 #include "globals.h"
 
-void add_hashl(hashed_link *h);
+void add_entry(router_entry *r);
 
-hashed_link *find_hashl(int seq_num);
+router_entry *find_entry(uint32_t network);

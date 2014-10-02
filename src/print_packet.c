@@ -20,6 +20,38 @@
 #include<sys/types.h>
 #include<unistd.h>
 
+void validate_ip_total_length(unsigned char *buffer, int size) {
+    struct iphdr *iph = (struct iphdr *)(buffer  + sizeof(struct ethhdr) );
+    unsigned short iphdrlen =iph->ihl*4;
+    struct udphdr *udph = (struct udphdr*)(buffer + iphdrlen  + sizeof(struct ethhdr));
+    int header_size =  sizeof(struct ethhdr) + iphdrlen + sizeof udph;
+    int payload_size = size - header_size;
+
+    int expected_ip_total_length = iphdrlen + sizeof udph + payload_size;
+
+    fprintf(LOGFILE , "   |-Size   : %d  Bytes(size of Packet)\n",size);
+    fprintf(LOGFILE , "   |-Got IP Total Length   : %d  Bytes(size of Packet)\n",ntohs(iph->tot_len));
+    fprintf(LOGFILE , "   |-Expected IP Total Length   : %d  Bytes(size of Packet)\n",expected_ip_total_length);
+}
+
+void print_ip(uint32_t ip) {
+    struct in_addr in_ip;
+    memset(&in_ip, 0, sizeof(struct in_addr));
+    in_ip.s_addr = ip;
+    printf(" %s ", (unsigned char *)inet_ntoa(in_ip));
+}
+
+void print_routed_packet(struct sockaddr_in dest, char *result_if_name,
+                         char *src_mac, char *dest_mac){
+    printf("dest ip: %s | send interface : %s | dest mac : ",
+           (unsigned char *)inet_ntoa(dest.sin_addr),
+           result_if_name);
+    print_mac(dest_mac);
+    printf(" | src mac : ");
+    print_mac(src_mac);
+    printf("\n");
+}
+
 unsigned short csum(unsigned short *buf, int len)
 {
         unsigned long sum;
@@ -93,6 +125,8 @@ void print_ip_header(unsigned char* buffer, int size)
     fprintf(LOGFILE , "   |-Source IP        : %s\n",inet_ntoa(source.sin_addr));
     fprintf(LOGFILE , "   |-Destination IP   : %s\n",inet_ntoa(dest.sin_addr));
 
+    validate_ip_total_length(buffer, size);
+
     // Calculate the checksum
     unsigned short chk = csum((unsigned short*)buffer, sizeof(struct iphdr) + sizeof(struct udphdr));
     fprintf(LOGFILE , "   |-Calculated   : %d\n", chk);
@@ -153,7 +187,8 @@ void print_icmp_packet(unsigned char* buffer , int size)
 
     struct icmphdr *icmph = (struct icmphdr *)(buffer + iphdrlen  + sizeof(struct ethhdr));
 
-    int header_size =  sizeof(struct ethhdr) + iphdrlen + sizeof icmph;
+    //int header_size =  sizeof(struct ethhdr) + iphdrlen + sizeof icmph;
+    int header_size =  sizeof(struct ethhdr) + iphdrlen + sizeof(struct icmphdr);
 
     fprintf(LOGFILE , "\n\n***********************ICMP Packet*************************\n");
 
@@ -183,7 +218,8 @@ void print_icmp_packet(unsigned char* buffer , int size)
     print_data_detail(buffer+sizeof(struct ethhdr) ,iphdrlen);
 
     fprintf(LOGFILE , "ICMP Header\n");
-    print_data_detail(buffer+sizeof(struct ethhdr) + iphdrlen , sizeof icmph);
+    //print_data_detail(buffer+sizeof(struct ethhdr) + iphdrlen , sizeof icmph);
+    print_data_detail(buffer+sizeof(struct ethhdr) + iphdrlen , sizeof(struct icmphdr));
 
     fprintf(LOGFILE , "Data Payload\n");
 

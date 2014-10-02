@@ -43,11 +43,15 @@ void send_ethernet_packet() {
     }
 }
 
+int get_send_size(unsigned char *packet, int data_size){
+    return data_size;
+}
+
 /**
  * Send packet actually
  * Creates the socket address
  */
-void send_packet_on_line(char *if_name, unsigned char *dest_mac, void *packet){
+void send_packet_on_line(char *if_name, unsigned char *dest_mac, void *packet, int data_size){
     struct ifreq ifr;
     /*target address*/
     struct sockaddr_ll socket_address;
@@ -58,9 +62,11 @@ void send_packet_on_line(char *if_name, unsigned char *dest_mac, void *packet){
     /*prepare sockaddr_ll*/
     create_socket_address(&socket_address, src_index, dest_mac);
 
-       /*send the packet*/
+    int send_size = get_send_size(packet, data_size);
+
+    /*send the packet*/
     int send_result = 0;
-    send_result = sendto(globals.send_sock_fd, packet, PACKET_SIZE , 0, (struct sockaddr*)&socket_address, sizeof(socket_address));
+    send_result = sendto(globals.send_sock_fd, packet, send_size , 0, (struct sockaddr*)&socket_address, sizeof(socket_address));
     if (send_result < 0){
 	printf("ERROR: sendto\n");
 	perror("sendto");

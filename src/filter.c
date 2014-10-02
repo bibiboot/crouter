@@ -23,8 +23,9 @@ bool is_allowed(unsigned char *packet, int data_size){
      */
     if (iph->protocol ==  17 || iph->protocol == 1 || iph->protocol == 6) {
 
-        if (is_mac_addr_equal(eth->h_dest, globals.src_mac) ||
-            is_mac_addr_equal(eth->h_dest, globals.src_mac2)){
+        if (is_mac_addr_equal(eth->h_dest, globals.eth1_mac) ||
+            is_mac_addr_equal(eth->h_dest, globals.eth2_mac) ||
+            is_mac_addr_equal(eth->h_dest, globals.eth3_mac)) {
             return true;
         }
     }
@@ -47,7 +48,9 @@ bool is_packet_reply(unsigned char *packet, int data_size) {
 
     /* Check ICMP packet, Echo request and destination ip */
     if ( iph->protocol == 1 &&
-         is_ip_equal((unsigned char *)inet_ntoa(dest.sin_addr), "10.10.0.2") &&
+         (is_ip_equal((unsigned char *)inet_ntoa(dest.sin_addr), "10.1.2.1") ||
+         is_ip_equal((unsigned char *)inet_ntoa(dest.sin_addr), "10.10.3.1") ||
+         is_ip_equal((unsigned char *)inet_ntoa(dest.sin_addr), "10.10.1.2") ) &&
          icmph->type == 8 ) {
         return true;
     }
