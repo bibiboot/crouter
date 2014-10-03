@@ -11,22 +11,22 @@
  * masked later.
  */
 void init_mask(){
-    char *mask = "255.255.255.0";
+    char *mask = DEF_MASK_255_255_255_0;
     memset(&(globals.mask_255_255_255_0), 0,
             sizeof(globals.mask_255_255_255_0));
     inet_aton(mask, &(globals.mask_255_255_255_0));
 
-    char *mask2 = "255.0.0.0";
+    char *mask2 = DEF_MASK_255_0_0_0;
     memset(&(globals.mask_255_0_0_0), 0,
             sizeof(globals.mask_255_255_255_0));
     inet_aton(mask2, &(globals.mask_255_0_0_0));
 }
 
 void init_network_id() {
-    char *network_LAN0 = "10.0.0.0";
-    char *network_LAN1 = "10.1.2.0";
-    char *network_rtr1 = "10.10.1.0";
-    char *network_rtr2 = "10.10.3.0";
+    char *network_LAN0 = LAN0_NETWORK;
+    char *network_LAN1 = LAN1_NETWORK;
+    char *network_rtr1 = RTR1_NETWORK;
+    char *network_rtr2 = RTR2_NETWORK;
 
     memset(&globals.sock_network_LAN0, 0, sizeof(struct in_addr));
     memset(&globals.sock_network_LAN1, 0, sizeof(struct in_addr));

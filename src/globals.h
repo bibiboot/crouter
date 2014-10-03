@@ -12,10 +12,7 @@
 #include "uthash.h"
 #include "config.h"
 
-
-//#define PACKET_SIZE 1000
 #define PACKET_SIZE 65536
-//#define LOGFILE stdout
 // Print function name, filename and line number in print
 #define DEBUG(fmt, ...) printf("%s:%d: " fmt, __FILE__, __LINE__, __VA_ARGS__);
 #define DBG(...) do{fprintf(stderr, "%s (%s, line %d): ", __func__, __FILE__, __LINE__); \
@@ -27,9 +24,17 @@
 #define NODE3_IP "10.1.2.3"
 #define NODE4_IP "10.1.2.4"
 
+#define LAN0_NETWORK "10.0.0.0"
+#define LAN1_NETWORK "10.1.2.0"
+#define RTR1_NETWORK "10.10.1.0"
+#define RTR2_NETWORK "10.10.3.0"
+
 #define INF0 "inf000"
 #define INF1 "inf001"
 #define INF2 "inf002"
+
+#define DEF_MASK_255_255_255_0 "255.255.255.0"
+#define DEF_MASK_255_0_0_0 "255.0.0.0"
 
 FILE *LOGFILE;
 
