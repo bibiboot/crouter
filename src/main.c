@@ -1,4 +1,6 @@
+#include "arp.h"
 #include "globals.h"
+#include "route_table.h"
 #include "socket_util.h"
 #include "util.h"
 
@@ -43,9 +45,9 @@ void init_network_id() {
  */
 void init_mac_addr(){
 
-    interface_addr(globals.send_sock_fd, "inf000", globals.eth1_mac);
-    interface_addr(globals.send_sock_fd, "inf001", globals.eth2_mac);
-    interface_addr(globals.send_sock_fd, "inf002", globals.eth3_mac);
+    interface_addr(globals.send_sock_fd, INF0, globals.eth1_mac);
+    interface_addr(globals.send_sock_fd, INF1, globals.eth2_mac);
+    interface_addr(globals.send_sock_fd, INF2, globals.eth3_mac);
 
 }
 
@@ -65,6 +67,17 @@ int main(int argc, char *argv[]){
 
     /* Get MAC address of all the three interfaces */
     init_mac_addr();
+
+    /* Build the arp table */
+    init_build_arp_cache();
+
+    /* Print the arp table */
+    print_arp_cache_table();
+
+    /* Building initial routing table */
+    init_build_route_table();
+
+    print_route_table();
 
     sniff();
 

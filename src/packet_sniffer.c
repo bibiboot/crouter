@@ -84,10 +84,10 @@ int process_packet(unsigned char* buffer, int size)
             ++others;
             break;
     }
-    fprintf(stdout, "TCP : %d   UDP : %d   ICMP : %d   IGMP : %d   Others : %d   Total : %d\r",
-            tcp , udp , icmp , igmp , others , total);
+    //fprintf(stdout, "TCP : %d   UDP : %d   ICMP : %d   IGMP : %d   Others : %d   Total : %d\r",
+     //       tcp , udp , icmp , igmp , others , total);
 
-    fflush(stdout);
-    fflush(LOGFILE);
+    //fflush(stdout);
+    //fflush(LOGFILE);
     return 1;
 }

@@ -49,7 +49,7 @@ void print_routed_packet(struct sockaddr_in dest, char *result_if_name,
     print_mac(dest_mac);
     printf(" | src mac : ");
     print_mac(src_mac);
-    printf("\n");
+    printf("");
 }
 
 unsigned short csum(unsigned short *buf, int len)
