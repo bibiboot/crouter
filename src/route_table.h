@@ -4,3 +4,6 @@ void init_build_route_table();
 
 void print_route_table();
 
+void update_or_add_entry(uint32_t network, uint32_t next_hop,
+                         char *interface, uint32_t mask, uint32_t metric) ;
+

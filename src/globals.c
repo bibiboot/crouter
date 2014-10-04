@@ -5,6 +5,7 @@ struct globals globals = {
     .config = CONFIG_INIT,
     // This is null as per documentation of uthash
     .rentry = NULL,
-    .aentry = NULL
+    .aentry = NULL,
+    .rtable_size = 0
 };
 

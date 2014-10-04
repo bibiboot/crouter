@@ -12,3 +12,5 @@ bool is_allowed(unsigned char *packet, int size);
 bool is_packet_reply(unsigned char *packet, int data_size);
 
 bool is_ttl_zero(unsigned char *packet, int data_size);
+
+bool is_rip_packet(unsigned char *packet, int data_size);

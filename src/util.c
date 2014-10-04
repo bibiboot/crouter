@@ -1,6 +1,15 @@
 #include "util.h"
+#include "print_packet.h"
 
+void print_rtable_keys() {
+    int i;
+    for (i = 0; i < globals.rtable_size; i++) {
+        printf("Network : ");
+        print_ip(globals.rtable_keys[i]);
+        printf("\n");
+    }
 
+}
 
 void create_log_file(){
     LOGFILE = fopen("log.txt","w");

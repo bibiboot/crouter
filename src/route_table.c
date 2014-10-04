@@ -61,7 +61,6 @@ bool get_route_entry(uint32_t network, uint32_t dest_ip,
  * | 10.1.2.0 |      *     |   inf000   | LAN 1 |
  * ++++++++++++++++++++++++++++++++++++++++++++++
  * | 10.10.3.0|      *     |   inf002   | rtr2  |
- *
  * ++++++++++++++++++++++++++++++++++++++++++++++
  * | 10.10.1.0|      *     |   inf001   | rtr1  |
  * ++++++++++++++++++++++++++++++++++++++++++++++
@@ -74,6 +73,23 @@ void print_route_table() {
     char res_interface[100];
     uint32_t res_mask;
 
+    int i;
+    for (i = 0; i < globals.rtable_size; i++) {
+        memset(res_interface, 0, 100);
+        uint32_t network_ip = globals.rtable_keys[i];
+        uint32_t next_hop = get_route_entry_print(network_ip,
+                                                  res_interface, &res_mask);
+        printf(" LAN0 | ");
+        print_ip(network_ip);
+        printf("  | %s |", res_interface);
+        print_ip(next_hop);
+        printf(" | ");
+        print_ip(res_mask);
+        printf(" | ");
+        printf("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+
+    }
+    /*
     uint32_t next_hop = get_route_entry_print(globals.sock_network_LAN0.s_addr,
                                         res_interface, &res_mask);
     printf(" LAN0 | ");
@@ -120,6 +136,7 @@ void print_route_table() {
     print_ip(res_mask);
     printf(" | ");
     printf("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+    */
 }
 
 void add_entry_char(char *network, char *next_hop,
@@ -145,8 +162,50 @@ void add_entry_uint(uint32_t network, char *next_hop,
     strcpy(r_node->interface, interface);
     /* Add entry */
     add_entry(r_node);
+
+    globals.rtable_keys[globals.rtable_size] = network;
+    globals.rtable_size++;
+
 }
 
+void add_entry_rip(uint32_t network, uint32_t next_hop,
+                    char *interface, uint32_t mask, uint32_t metric) {
+    printf("\n Debug route: Mask:  ");
+    print_ip(mask);
+    printf("  Network ip : ");
+    print_ip(network);
+    printf("\n");
+ 
+    /* Create entry */
+    router_entry *r_node = malloc(sizeof(router_entry));
+    r_node->network = network;
+    r_node->next_hop = next_hop;
+    r_node->mask = mask;;
+    strcpy(r_node->interface, interface);
+    /* Add entry */
+    add_entry(r_node);
+
+    globals.rtable_keys[globals.rtable_size] = network;
+    globals.rtable_size++;
+}
+
+/**
+ * This will add or update the entry in the routing table
+ * as per the RIP entry recieved.
+ */
+void update_or_add_entry(uint32_t network, uint32_t next_hop,
+                         char *interface, uint32_t mask, uint32_t metric) {
+    /** Look for entry in the table
+     *  If the entry is not their, then add
+     *  entry otherwise compare and create
+     */
+    router_entry *rentry = (router_entry*)find_entry(network);
+    if( rentry == NULL ) {
+        printf("NULL\n");
+        add_entry_rip(network, next_hop, interface, mask, metric);
+    }
+}
+                         
 /**
  * Network | Next Hop | Interface
  *  int         int       string

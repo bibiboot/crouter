@@ -76,8 +76,6 @@ int main(int argc, char *argv[]){
 
     /* Building initial routing table */
     init_build_route_table();
-    init_build_route_table();
-
 
     print_route_table();
 

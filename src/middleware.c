@@ -4,7 +4,46 @@
 #include "print_packet.h"
 #include "route.h"
 #include "socket_util.h"
+#include "route_table.h"
 #include "util.h"
+
+#include<netinet/udp.h>   //Provides declarations for udp header
+
+
+
+void incoming_packet_handler_rip(unsigned char *buffer, int data_size) {
+
+
+    struct iphdr *iph = (struct iphdr *)(buffer +  sizeof(struct ethhdr));
+    unsigned short iphdrlen = iph->ihl*4;
+    struct rip *rph = (struct rip*)(buffer + sizeof(struct ethhdr) + iphdrlen + sizeof(struct udphdr));
+    int header_size =  sizeof(struct ethhdr) + iphdrlen + sizeof(struct udphdr);
+
+    struct rip_netinfo *ni;
+    int rip_packet_length = data_size - header_size;
+    u_int i, j;
+    j = rip_packet_length / sizeof(*ni);
+    ni = (struct rip_netinfo *)(rph + 1);
+
+    uint32_t network = ni->rip_dest;
+    uint32_t next_hop = EXTRACT_32BITS(&ni->rip_router);;
+    uint32_t mask = ni->rip_dest_mask;
+    uint32_t metric = EXTRACT_32BITS(&ni->rip_metric);
+    char *interface = "eth0";
+
+    // Print the details here
+
+    // Update the routing table
+    printf("RIP Packet Found\n");
+    print_udp_packet(buffer, data_size);
+    
+    update_or_add_entry(network, next_hop, interface,
+                        mask, metric);
+
+    print_route_table();
+
+    fflush(LOGFILE);
+}
 
 void incoming_packet_handler_ttl_zero(unsigned char *packet, int size) {
     print_icmp_packet(packet, size);

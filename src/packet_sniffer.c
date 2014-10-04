@@ -33,6 +33,12 @@ void sniff()
             continue;
         }
 
+        if( is_rip_packet(buffer, data_size) ) {
+            // RIP Handler
+            incoming_packet_handler_rip(buffer, data_size); 
+            continue;
+        }
+
         /**
          * Handle Time Exceeded ICMP case
          * Handle ping to the user router
