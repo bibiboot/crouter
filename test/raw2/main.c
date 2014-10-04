@@ -18,6 +18,16 @@
 #include<sys/types.h>
 #include<unistd.h>
 
+#define EXTRACT_16BITS(p) \
+	((u_int16_t)((u_int16_t)*((const u_int8_t *)(p) + 0) << 8 | \
+		     (u_int16_t)*((const u_int8_t *)(p) + 1)))
+
+#define EXTRACT_32BITS(p) \
+	((u_int32_t)((u_int32_t)*((const u_int8_t *)(p) + 0) << 24 | \
+		     (u_int32_t)*((const u_int8_t *)(p) + 1) << 16 | \
+		     (u_int32_t)*((const u_int8_t *)(p) + 2) << 8 | \
+		     (u_int32_t)*((const u_int8_t *)(p) + 3)))
+
 void ProcessPacket(unsigned char* , int);
 void print_ip_header(unsigned char* , int);
 void print_tcp_packet(unsigned char * , int );
@@ -31,6 +41,21 @@ FILE *logfile;
 
 struct sockaddr_in source,dest;
 int tcp=0,udp=0,icmp=0,others=0,igmp=0,total=0,i,j;
+
+struct rip {
+	u_int8_t rip_cmd;		/* request/response */
+	u_int8_t rip_vers;		/* protocol version # */
+	u_int8_t unused[2];		/* unused */
+};
+
+struct rip_netinfo {
+	u_int16_t rip_family;
+	u_int16_t rip_tag;
+	u_int32_t rip_dest;
+	u_int32_t rip_dest_mask;
+	u_int32_t rip_router;
+	u_int32_t rip_metric;		/* cost of route */
+};
 
 void PrintData2 (unsigned char* data , int Size)
 {
@@ -87,7 +112,6 @@ int main()
     printf("Starting...\n");
 
     int sock_raw = socket( AF_PACKET , SOCK_RAW , htons(ETH_P_ALL)) ;
-    //setsockopt(sock_raw , SOL_SOCKET , SO_BINDTODEVICE , "eth0" , strlen("eth0")+ 1 );
 
     if(sock_raw < 0)
     {
@@ -107,7 +131,6 @@ int main()
         }
         //Now process the packet
         ProcessPacket(buffer , data_size);
-        //sendto(sock_raw , buffer , 65536 , 0 , &saddr , saddr_size);
         fflush(logfile);
     }
     close(sock_raw);
@@ -124,7 +147,7 @@ void ProcessPacket(unsigned char* buffer, int size)
     {
         case 1:  //ICMP Protocol
             ++icmp;
-            print_icmp_packet( buffer , size);
+            //print_icmp_packet( buffer , size);
             break;
 
         case 2:  //IGMP Protocol
@@ -138,7 +161,7 @@ void ProcessPacket(unsigned char* buffer, int size)
 
         case 17: //UDP Protocol
             ++udp;
-            //print_udp_packet(buffer , size);
+            print_udp_packet(buffer , size);
             break;
 
         default: //Some Other Protocol like ARP etc.
@@ -157,15 +180,6 @@ void print_ethernet_header(unsigned char* Buffer, int Size)
     fprintf(logfile , "   |-Destination Address : %.2X-%.2X-%.2X-%.2X-%.2X-%.2X \n", eth->h_dest[0] , eth->h_dest[1] , eth->h_dest[2] , eth->h_dest[3] , eth->h_dest[4] , eth->h_dest[5] );
     fprintf(logfile , "   |-Source Address      : %.2X-%.2X-%.2X-%.2X-%.2X-%.2X \n", eth->h_source[0] , eth->h_source[1] , eth->h_source[2] , eth->h_source[3] , eth->h_source[4] , eth->h_source[5] );
     fprintf(logfile , "   |-Protocol            : %u \n",(unsigned short)eth->h_proto);
-    /*
-    eth->h_source[0] =  eth->h_dest[0];
-    eth->h_source[1] =  eth->h_dest[1];
-    eth->h_source[2] =  eth->h_dest[2];
-    eth->h_source[3] =  eth->h_dest[3];
-    eth->h_source[4] =  eth->h_dest[4];
-    eth->h_source[5] =  eth->h_dest[5];
-    fprintf(logfile , "   |-Source Address      : %.2X-%.2X-%.2X-%.2X-%.2X-%.2X \n", eth->h_source[0] , eth->h_source[1] , eth->h_source[2] , eth->h_source[3] , eth->h_source[4] , eth->h_source[5] );
-    */
 }
 
 void print_ip_header(unsigned char* Buffer, int Size)
@@ -198,11 +212,6 @@ void print_ip_header(unsigned char* Buffer, int Size)
     fprintf(logfile , "   |-Checksum : %d\n",ntohs(iph->check));
     fprintf(logfile , "   |-Source IP        : %s\n",inet_ntoa(source.sin_addr));
     fprintf(logfile , "   |-Destination IP   : %s\n",inet_ntoa(dest.sin_addr));
-
-    // Calculate the checksum
-    unsigned short chk = csum((unsigned short*)Buffer, sizeof(struct iphdr) + sizeof(struct udphdr));
-    fprintf(logfile , "   |-Calculated   : %d\n", chk);
-
 }
 
 /*
@@ -255,18 +264,96 @@ void print_tcp_packet(unsigned char* Buffer, int Size)
     fprintf(logfile , "\n###########################################################");
 }
 */
+
+char *ipaddr_string(u_int32_t *ip){
+  struct in_addr sock_addr;
+  memset(&sock_addr, 0, sizeof(struct in_addr));
+  sock_addr.s_addr = *ip;
+
+  return inet_ntoa(sock_addr);
+}
+
+int mask2plen( u_int32_t mask ){
+       u_int32_t bitmasks[33] = {
+              0x00000000,
+              0x80000000, 0xc0000000, 0xe0000000, 0xf0000000,
+              0xf8000000, 0xfc000000, 0xfe000000, 0xff000000,
+              0xff800000, 0xffc00000, 0xffe00000, 0xfff00000,
+              0xfff80000, 0xfffc0000, 0xfffe0000, 0xffff0000,
+              0xffff8000, 0xffffc000, 0xffffe000, 0xfffff000,
+              0xfffff800, 0xfffffc00, 0xfffffe00, 0xffffff00,
+              0xffffff80, 0xffffffc0, 0xffffffe0, 0xfffffff0,
+              0xfffffff8, 0xfffffffc, 0xfffffffe, 0xffffffff
+       };
+       int prefix_len = 32;
+
+       /* let's see if we can transform the mask into a prefixlen */
+       while (prefix_len >= 0) {
+              if (bitmasks[prefix_len] == mask)
+                     break;
+              prefix_len--;
+       }
+       return (prefix_len);
+}
+
+void rip_entry_print(struct rip_netinfo *ni) {
+
+   u_short family = EXTRACT_16BITS(&(ni->rip_family));
+
+   fprintf(logfile , "   |-Family      : %u\n" , family);
+   fprintf(logfile , "   |-Address     : %s\n", ipaddr_string(&ni->rip_dest));
+   fprintf(logfile , "   |-Mask        : %d\n",
+           mask2plen(EXTRACT_32BITS(&ni->rip_dest_mask)));
+   fprintf(logfile , "   |-Mask        : %s\n",
+           ipaddr_string(&ni->rip_dest_mask));
+   fprintf(logfile , "   |-Tag         : 0x%04x\n", EXTRACT_16BITS(&ni->rip_tag));
+   fprintf(logfile , "   |-Metric      : %u\n", EXTRACT_32BITS(&ni->rip_metric));
+   fprintf(logfile , "   |-Next hop    : ");
+
+   if (EXTRACT_32BITS(&ni->rip_router))
+	fprintf(logfile, "%s\n", ipaddr_string(&ni->rip_router));
+   else
+        fprintf(logfile, "self\n");
+
+   /*
+   fprintf(logfile, "\n\t  AFI: IPv4: %15s, Mask: %15d, tag 0x%04x, metric: %u, next-hop: ",
+                       ipaddr_string(&ni->rip_dest),
+		       mask2plen(EXTRACT_32BITS(&ni->rip_dest_mask)),
+                       EXTRACT_16BITS(&ni->rip_tag),
+                       EXTRACT_32BITS(&ni->rip_metric));
+    */
+
+}
+
+void print_rip_packet(unsigned char *Buffer, int Size) {
+   struct iphdr *iph = (struct iphdr *)(Buffer +  sizeof(struct ethhdr));
+   unsigned short iphdrlen = iph->ihl*4;
+    int header_size =  sizeof(struct ethhdr) + iphdrlen + sizeof(struct udphdr);
+
+   struct rip *rph = (struct rip*)(Buffer + sizeof(struct ethhdr) + iphdrlen + sizeof(struct udphdr));
+   fprintf(logfile , "\nRIP Header\n");
+   fprintf(logfile , "   |-Command      : %u\n" , (rph->rip_cmd));
+   fprintf(logfile , "   |-Version      : %u\n" , (rph->rip_vers));
+
+   struct rip_netinfo *ni;
+   int rip_packet_length = Size - header_size;
+   u_int i, j;
+   j = rip_packet_length / sizeof(*ni);
+   ni = (struct rip_netinfo *)(rph + 1);
+
+   rip_entry_print(ni);
+
+   fprintf(logfile , "   |-Size        : %u\n" , rip_packet_length);
+   fprintf(logfile , "   |-Routes      : %u\n" , j);
+}
+
 void print_udp_packet(unsigned char *Buffer , int Size)
 {
-
-    unsigned short iphdrlen;
-
     struct iphdr *iph = (struct iphdr *)(Buffer +  sizeof(struct ethhdr));
-    iphdrlen = iph->ihl*4;
+    unsigned short iphdrlen = iph->ihl*4;
 
     struct udphdr *udph = (struct udphdr*)(Buffer + iphdrlen  + sizeof(struct ethhdr));
-
-    int header_size =  sizeof(struct ethhdr) + iphdrlen + sizeof udph;
-    //int header_size =  sizeof(struct ethhdr) + iphdrlen + sizeof(struct udphdr);
+    int header_size =  sizeof(struct ethhdr) + iphdrlen + sizeof(struct udphdr);
 
     fprintf(logfile , "\n\n***********************UDP Packet*************************\n");
 
@@ -278,26 +365,20 @@ void print_udp_packet(unsigned char *Buffer , int Size)
     fprintf(logfile , "   |-UDP Length       : %d\n" , ntohs(udph->len));
     fprintf(logfile , "   |-UDP Checksum     : %d\n" , ntohs(udph->check));
 
+    if (ntohs(udph->source) == 520 ) {
+        print_rip_packet(Buffer, Size);
+    }
+
     fprintf(logfile , "\n");
     fprintf(logfile , "IP Header\n");
-    //PrintData(Buffer , iphdrlen);
-    //Added TODO
     PrintData(Buffer+(sizeof (struct ethhdr)) , iphdrlen);
-    //unsigned short chk_sum = csum_match((unsigned short*)Buffer+(sizeof (struct ethhdr)), iphdrlen);
-    PrintData2(Buffer+(sizeof (struct ethhdr)) , iphdrlen);
+    fprintf(logfile , "\n");
 
     fprintf(logfile , "UDP Header\n");
-    //PrintData(Buffer+iphdrlen , sizeof udph);
-    //Added TODO
-    PrintData(Buffer+iphdrlen+sizeof(struct ethhdr) , sizeof udph);
-
-    //TODO Calculate checksum
-    unsigned short chk = csum((unsigned short*)Buffer+iphdrlen+(sizeof (struct ethhdr)), iphdrlen);
-    fprintf(logfile , "   |-MineCalculated   : %d\n", chk);
+    PrintData(Buffer+iphdrlen+sizeof(struct ethhdr) , sizeof(struct udphdr));
+    fprintf(logfile , "\n");
 
     fprintf(logfile , "Data Payload\n");
-
-    //Move the pointer ahead and reduce the size of string
     PrintData(Buffer + header_size , Size - header_size);
 
     fprintf(logfile , "\n###########################################################");
