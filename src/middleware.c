@@ -6,13 +6,24 @@
 #include "socket_util.h"
 #include "route_table.h"
 #include "util.h"
-
 #include<netinet/udp.h>   //Provides declarations for udp header
 
-
+/**
+ * Based on the source ip,
+ * it can tell us where it was recieved,
+ * that is which interface
+ */
+void get_recived_interface(uint32_t dest_ip, char *res_interface) {
+    // Ip of the sending router with RIP packet
+    if ( dest_ip == char_to_uint32(RTR1_IP) ) {
+       strcpy(res_interface, INF0);
+    } else {
+       printf("RIP: This should never happen, do not know the interface recoeved\n");
+       exit(1);
+    }
+}
 
 void incoming_packet_handler_rip(unsigned char *buffer, int data_size) {
-
 
     struct iphdr *iph = (struct iphdr *)(buffer +  sizeof(struct ethhdr));
     unsigned short iphdrlen = iph->ihl*4;
@@ -29,14 +40,16 @@ void incoming_packet_handler_rip(unsigned char *buffer, int data_size) {
     uint32_t next_hop = EXTRACT_32BITS(&ni->rip_router);;
     uint32_t mask = ni->rip_dest_mask;
     uint32_t metric = EXTRACT_32BITS(&ni->rip_metric);
-    char *interface = "eth0";
+
+    char interface[IFNAMSIZ];
+    get_recived_interface(iph->saddr, interface);
 
     // Print the details here
 
     // Update the routing table
     printf("RIP Packet Found\n");
     print_udp_packet(buffer, data_size);
-    
+
     update_or_add_entry(network, next_hop, interface,
                         mask, metric);
 

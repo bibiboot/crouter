@@ -1,12 +1,12 @@
 #include "route_table.h"
 
-uint32_t char_to_uint32(char *network) {
-    struct in_addr sock_network;
-    memset(&sock_network, 0, sizeof(struct in_addr));
+#define DEF_MASK_255_255_255_0 "255.255.255.0"
+#define DEF_MASK_255_0_0_0 "255.0.0.0"
 
-    inet_aton(network, &sock_network);
-    return sock_network.s_addr;
-}
+#define LAN0_NETWORK "10.0.0.0"
+#define LAN1_NETWORK "10.1.2.0"
+#define RTR1_NETWORK "10.10.1.0"
+#define RTR2_NETWORK "10.10.3.0"
 
 uint32_t get_route_entry_print(uint32_t network, char *interface, uint32_t *mask) {
 
@@ -175,7 +175,7 @@ void add_entry_rip(uint32_t network, uint32_t next_hop,
     printf("  Network ip : ");
     print_ip(network);
     printf("\n");
- 
+
     /* Create entry */
     router_entry *r_node = malloc(sizeof(router_entry));
     r_node->network = network;
@@ -205,14 +205,33 @@ void update_or_add_entry(uint32_t network, uint32_t next_hop,
         add_entry_rip(network, next_hop, interface, mask, metric);
     }
 }
-                         
+
+void init_network_id() {
+    char *network_LAN0 = LAN0_NETWORK;
+    char *network_LAN1 = LAN1_NETWORK;
+    char *network_rtr1 = RTR1_NETWORK;
+    char *network_rtr2 = RTR2_NETWORK;
+
+    memset(&globals.sock_network_LAN0, 0, sizeof(struct in_addr));
+    memset(&globals.sock_network_LAN1, 0, sizeof(struct in_addr));
+    memset(&globals.sock_network_rtr1, 0, sizeof(struct in_addr));
+    memset(&globals.sock_network_rtr2, 0, sizeof(struct in_addr));
+
+    inet_aton(network_LAN0, &(globals.sock_network_LAN0));
+    inet_aton(network_LAN1, &(globals.sock_network_LAN1));
+    inet_aton(network_rtr1, &(globals.sock_network_rtr1));
+    inet_aton(network_rtr2, &(globals.sock_network_rtr2));
+}
+
 /**
  * Network | Next Hop | Interface
  *  int         int       string
  */
 void init_build_route_table(){
-    add_entry_uint(globals.sock_network_LAN0.s_addr, RTR1_IP, INF1, DEF_MASK_255_0_0_0);
+    init_network_id();
+
     add_entry_uint(globals.sock_network_LAN1.s_addr, "0", INF0, DEF_MASK_255_255_255_0);
     add_entry_uint(globals.sock_network_rtr1.s_addr, "0", INF1, DEF_MASK_255_255_255_0);
     add_entry_uint(globals.sock_network_rtr2.s_addr, "0", INF2, DEF_MASK_255_255_255_0);
+    add_entry_uint(globals.sock_network_LAN0.s_addr, RTR1_IP, INF1, DEF_MASK_255_0_0_0);
 }

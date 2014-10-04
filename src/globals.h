@@ -12,6 +12,11 @@
 #include "uthash.h"
 #include "config.h"
 
+/* Three different topology */
+#define FORWARD
+//#define DYNAMIC
+//#define PERFORMACE
+
 #define PACKET_SIZE 65536
 #define RIP_PORT 520
 // Print function name, filename and line number in print
@@ -20,34 +25,38 @@
                          fprintf(stderr, __VA_ARGS__);           \
                          fprintf(stderr, "\n");} while(0)
 
+/* Set up the neighboorhood nodes ip*/
+#ifdef FORWARD
 #define RTR1_IP "10.10.1.1"
 #define RTR2_IP "10.10.3.2"
 #define NODE3_IP "10.1.2.3"
 #define NODE4_IP "10.1.2.4"
-
-#define LAN0_NETWORK "10.0.0.0"
-#define LAN1_NETWORK "10.1.2.0"
-#define RTR1_NETWORK "10.10.1.0"
-#define RTR2_NETWORK "10.10.3.0"
-
-/*
 #define INF0 "inf000"
 #define INF1 "inf001"
 #define INF2 "inf002"
-*/
-
-#define INF0 "eth0"
-#define INF1 "eth1"
-#define INF2 "eth2"
-
 #define ETH0_IP "10.1.2.1"
 #define ETH1_IP "10.10.3.1"
 #define ETH2_IP "10.10.1.2"
+#endif
+
+#ifdef DYNAMIC
+#define RTR1_IP "10.1.2.3"
+#define RTR2_IP "10.10.3.2"
+#define NODE3_IP "10.1.2.3"
+#define NODE4_IP "10.1.2.4"
+#define INF0 "eth0"
+#define INF1 "eth1"
+#define INF2 "eth2"
+#define ETH0_IP "10.1.2.1"
+#define ETH1_IP "10.10.3.1"
+#define ETH2_IP "10.10.1.2"
+#endif
+
+#ifdef PERFORMACE
+#define test 1
+#endif
 
 #define MULTICAST_IP "224.0.0.9"
-
-#define DEF_MASK_255_255_255_0 "255.255.255.0"
-#define DEF_MASK_255_0_0_0 "255.0.0.0"
 
 #define EXTRACT_16BITS(p) \
 	((u_int16_t)((u_int16_t)*((const u_int8_t *)(p) + 0) << 8 | \

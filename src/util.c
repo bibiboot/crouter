@@ -1,6 +1,22 @@
 #include "util.h"
 #include "print_packet.h"
 
+uint32_t char_to_uint32(char *network) {
+    struct in_addr sock_network;
+    memset(&sock_network, 0, sizeof(struct in_addr));
+
+    inet_aton(network, &sock_network);
+    return sock_network.s_addr;
+}
+/*
+char *ipaddr_string(u_int32_t *ip){
+  struct in_addr sock_addr;
+  memset(&sock_addr, 0, sizeof(struct in_addr));
+  sock_addr.s_addr = *ip;
+
+  return (char*)inet_ntoa(sock_addr);
+}*/
+
 void print_rtable_keys() {
     int i;
     for (i = 0; i < globals.rtable_size; i++) {

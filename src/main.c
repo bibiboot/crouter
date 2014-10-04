@@ -4,24 +4,7 @@
 #include "socket_util.h"
 #include "util.h"
 
-/**
- * Create mask
- * 255.255.255.0 | 255.0.0.0
- * in the uint_32 format so that it can be
- * masked later.
- */
-void init_mask(){
-    char *mask = DEF_MASK_255_255_255_0;
-    memset(&(globals.mask_255_255_255_0), 0,
-            sizeof(globals.mask_255_255_255_0));
-    inet_aton(mask, &(globals.mask_255_255_255_0));
-
-    char *mask2 = DEF_MASK_255_0_0_0;
-    memset(&(globals.mask_255_0_0_0), 0,
-            sizeof(globals.mask_255_255_255_0));
-    inet_aton(mask2, &(globals.mask_255_0_0_0));
-}
-
+/*
 void init_network_id() {
     char *network_LAN0 = LAN0_NETWORK;
     char *network_LAN1 = LAN1_NETWORK;
@@ -38,6 +21,7 @@ void init_network_id() {
     inet_aton(network_rtr1, &(globals.sock_network_rtr1));
     inet_aton(network_rtr2, &(globals.sock_network_rtr2));
 }
+*/
 
 /**
  * Router's interfaces and its mac addresss
@@ -53,11 +37,8 @@ void init_mac_addr(){
 
 int main(int argc, char *argv[]){
 
-    /* Initialize the two mask as uint_32 */
-    init_mask();
-
     /* Initiliaze all the network ids in the topo as sock */
-    init_network_id();
+    //init_network_id();
 
     /* Create file descriptor to write the packet */
     create_log_file();

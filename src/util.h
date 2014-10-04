@@ -1,6 +1,10 @@
 #include "globals.h"
 #include <linux/if_ether.h>
 
+uint32_t char_to_uint32(char *network);
+
+char *ipaddr_string(u_int32_t *ip);
+
 void print_rtable_keys();
 
 void create_log_file();

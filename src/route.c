@@ -46,28 +46,16 @@ void get_new_route(uint32_t dest_ip,
                    char *result_if_name, char *dest_mac,
                    char *src_mac){
 
-
-    if ( route_logic(globals.sock_network_LAN1.s_addr, dest_ip,
-                    src_mac, dest_mac, result_if_name) ) {
-        return ;
-
-    } else if ( route_logic(globals.sock_network_rtr2.s_addr, dest_ip,
-                    src_mac, dest_mac, result_if_name) ) {
-
-        return;
-
-    } else if ( route_logic(globals.sock_network_rtr1.s_addr, dest_ip,
-                    src_mac, dest_mac, result_if_name) ) {
-        return;
-
-    } else if ( route_logic(globals.sock_network_LAN0.s_addr, dest_ip,
-                    src_mac, dest_mac, result_if_name) ) {
-        return;
-
-    } else {
-
-        printf("No entry found : network ip:");
-        print_ip(dest_ip);
-        printf("\n");
+    int i;
+    for ( i = 0; i < globals.rtable_size; i++ ) {
+        if ( route_logic(globals.rtable_keys[i], dest_ip,
+                         src_mac, dest_mac, result_if_name) ) {
+            return;
+        }
     }
+
+    printf("No entry found : network ip:");
+    print_ip(dest_ip);
+    printf("\n");
+    return ;
 }

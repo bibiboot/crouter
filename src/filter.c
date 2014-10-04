@@ -26,9 +26,9 @@ bool is_rip_packet(unsigned char *packet, int data_size) {
     unsigned short iphdrlen = iph->ihl * 4;
     struct udphdr *udph = (struct udphdr*)(packet + iphdrlen  + sizeof(struct ethhdr));
 
-    printf("PROT: %d, PORT: %d, DEST IP: ", iph->protocol, ntohs(udph->dest));
-    print_ip(iph->daddr);
-    printf("\n");
+    //printf("PROT: %d, PORT: %d, DEST IP: ", iph->protocol, ntohs(udph->dest));
+    //print_ip(iph->daddr);
+    //printf("\n");
 
     if (iph->protocol == 17 && ntohs(udph->dest) == RIP_PORT) {
         return true;
