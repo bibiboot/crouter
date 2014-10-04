@@ -43,6 +43,7 @@ typedef struct hashl {
     // Address of the node in list.
     uint32_t network;
     uint32_t next_hop;
+    uint32_t mask;
     char interface[100];
     UT_hash_handle hh;
 } router_entry;

@@ -82,8 +82,9 @@ void get_mac_from_arp_cache(uint32_t ip, char *mac_addr) {
 
     arp_entry *a_node = (arp_entry*)(find_arp_entry(ip));
     if (!a_node) {
+        printf("\nARP: This should never happen. IP : ");
         print_ip(ip);
-        printf("ARP: This should never happen\n");
+        printf(" not found in arp cache\n");
         exit(1);
     }
     memcpy(mac_addr, a_node->mac_addr, ETH_ALEN);
