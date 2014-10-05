@@ -1,3 +1,5 @@
+#pragma once
+
 #include "globals.h"
 #include <linux/if_ether.h>
 #include <linux/if_packet.h>

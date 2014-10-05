@@ -5,16 +5,17 @@
 #include <sys/socket.h>
 #include <stdbool.h>
 #include <string.h>
-#include <pthread.h>
 #include <linux/if_ether.h>
 #include<netinet/ip.h>    //Provides declarations for ip header
+#include <pthread.h>
 
 #include "uthash.h"
 #include "config.h"
 
+
 /* Three different topology */
-#define FORWARD
-//#define DYNAMIC
+//#define FORWARD
+#define DYNAMIC
 //#define PERFORMACE
 
 #define PACKET_SIZE 65536
@@ -77,6 +78,7 @@ typedef struct hashl {
     uint32_t network;
     uint32_t next_hop;
     uint32_t mask;
+    uint32_t metric;
     char interface[100];
     UT_hash_handle hh;
 } router_entry;
@@ -106,6 +108,9 @@ struct globals {
     struct in_addr sock_network_rtr2;
     uint32_t rtable_keys[10];
     int rtable_size;
+    pthread_t sniff_th, ripd_th;
+    int ripd_eth0_fd, ripd_eth1_fd;
+    struct sockaddr_in ripd_eth0_sock, ripd_eth1_sock;
 };
 
 struct rip {

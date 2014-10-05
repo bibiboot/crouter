@@ -18,7 +18,9 @@ void get_recived_interface(uint32_t dest_ip, char *res_interface) {
     if ( dest_ip == char_to_uint32(RTR1_IP) ) {
        strcpy(res_interface, INF0);
     } else {
-       printf("RIP: This should never happen, do not know the interface recoeved\n");
+       printf("RIP: This should never happen, No interface found for : ");
+       print_ip(dest_ip);
+       printf("\n");
        exit(1);
     }
 }
@@ -45,9 +47,6 @@ void incoming_packet_handler_rip(unsigned char *buffer, int data_size) {
     char interface[IFNAMSIZ];
     get_recived_interface(iph->saddr, interface);
 
-    // Print the details here
-
-    // Update the routing table
     printf("\nRIP Packet Found\n");
     //print_udp_packet(buffer, data_size);
 

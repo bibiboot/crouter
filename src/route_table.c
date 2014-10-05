@@ -8,7 +8,8 @@
 #define RTR1_NETWORK "10.10.1.0"
 #define RTR2_NETWORK "10.10.3.0"
 
-uint32_t get_route_entry_print(uint32_t network, char *interface, uint32_t *mask) {
+uint32_t get_route_entry_print(uint32_t network, char *interface, 
+                               uint32_t *mask, uint32_t *metric) {
 
     router_entry *rentry = (router_entry*)find_entry(network);
     if (rentry == NULL) {
@@ -17,12 +18,29 @@ uint32_t get_route_entry_print(uint32_t network, char *interface, uint32_t *mask
     }
 
     *mask = rentry->mask;
+    *metric = rentry->metric;
+    strcpy(interface, rentry->interface);
+    return rentry->next_hop;
+}
+
+uint32_t get_route_entry_rip(uint32_t network, char *interface, 
+                             uint32_t *mask, uint32_t *metric) {
+
+    router_entry *rentry = (router_entry*)find_entry(network);
+    if (rentry == NULL) {
+        printf("ROUTER: This should never happen\n");
+        exit(1);
+    }
+
+    *mask = rentry->mask;
+    *metric = rentry->metric;
     strcpy(interface, rentry->interface);
     return rentry->next_hop;
 }
 
 bool get_route_entry(uint32_t network, uint32_t dest_ip,
-                     char *interface, uint32_t *mask, uint32_t *next_hop) {
+                     char *interface, uint32_t *mask, uint32_t *next_hop,
+                     uint32_t *metric) {
 
     router_entry *rentry = (router_entry*)find_entry(network);
     if (rentry == NULL) {
@@ -47,6 +65,7 @@ bool get_route_entry(uint32_t network, uint32_t dest_ip,
 
     *mask = rentry->mask;
     *next_hop = rentry->next_hop;
+    *metric = rentry->metric;
     strcpy(interface, rentry->interface);
 
     return true;
@@ -70,72 +89,25 @@ void print_route_table() {
     printf("Route table");
     printf("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
     char res_interface[100];
-    uint32_t res_mask;
+    uint32_t res_mask, metric;
 
     int i;
     for (i = 0; i < globals.rtable_size; i++) {
         memset(res_interface, 0, 100);
         uint32_t network_ip = globals.rtable_keys[i];
         uint32_t next_hop = get_route_entry_print(network_ip,
-                                                  res_interface, &res_mask);
-        printf(" LAN0 | ");
+                                                  res_interface, &res_mask,
+                                                  &metric);
         print_ip(network_ip);
         printf("  | %s |", res_interface);
         print_ip(next_hop);
         printf(" | ");
         print_ip(res_mask);
         printf(" | ");
+        printf( " %d ", metric);
         printf("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
 
     }
-    /*
-    uint32_t next_hop = get_route_entry_print(globals.sock_network_LAN0.s_addr,
-                                        res_interface, &res_mask);
-    printf(" LAN0 | ");
-    print_ip(globals.sock_network_LAN0.s_addr);
-    printf("  | %s |", res_interface);
-    print_ip(next_hop);
-    printf(" | ");
-    print_ip(res_mask);
-    printf(" | ");
-    printf("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
-
-    memset(res_interface, 0, 100);
-    next_hop = get_route_entry_print(globals.sock_network_LAN1.s_addr,
-                               res_interface, &res_mask);
-    printf(" LAN1 | ");
-    print_ip(globals.sock_network_LAN1.s_addr);
-    printf("  | %s |", res_interface);
-    print_ip(next_hop);
-    printf(" | ");
-    print_ip(res_mask);
-    printf(" | ");
-    printf("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
-
-    memset(res_interface, 0, 100);
-    next_hop = get_route_entry_print(globals.sock_network_rtr1.s_addr,
-                               res_interface, &res_mask);
-    printf(" rtr1 | ");
-    print_ip(globals.sock_network_rtr1.s_addr);
-    printf(" | %s |", res_interface);
-    print_ip(next_hop);
-    printf(" | ");
-    print_ip(res_mask);
-    printf(" | ");
-    printf("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
-
-    memset(res_interface, 0, 100);
-    next_hop = get_route_entry_print(globals.sock_network_rtr2.s_addr,
-                               res_interface, &res_mask);
-    printf(" rtr2 | ");
-    print_ip(globals.sock_network_rtr2.s_addr);
-    printf(" | %s |", res_interface);
-    print_ip(next_hop);
-    printf(" | ");
-    print_ip(res_mask);
-    printf(" | ");
-    printf("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
-    */
 }
 
 void add_entry_char(char *network, char *next_hop,
@@ -151,13 +123,14 @@ void add_entry_char(char *network, char *next_hop,
 }
 
 void add_entry_uint(uint32_t network, char *next_hop,
-                    char *interface, char *mask) {
+                    char *interface, char *mask, uint32_t metric) {
 
     /* Create entry */
     router_entry *r_node = malloc(sizeof(router_entry));
     r_node->network = network;
     r_node->next_hop = char_to_uint32(next_hop);
     r_node->mask = char_to_uint32(mask);
+    r_node->metric = metric;
     strcpy(r_node->interface, interface);
     /* Add entry */
     add_entry(r_node);
@@ -229,13 +202,13 @@ void init_network_id() {
 void init_build_route_table(){
     init_network_id();
 
-    add_entry_uint(globals.sock_network_LAN1.s_addr, "0", INF0, DEF_MASK_255_255_255_0);
-    add_entry_uint(globals.sock_network_rtr1.s_addr, "0", INF1, DEF_MASK_255_255_255_0);
-    add_entry_uint(globals.sock_network_rtr2.s_addr, "0", INF2, DEF_MASK_255_255_255_0);
-    add_entry_uint(globals.sock_network_LAN0.s_addr, RTR1_IP, INF1, DEF_MASK_255_0_0_0);
+    add_entry_uint(globals.sock_network_LAN1.s_addr, "0", INF0, DEF_MASK_255_255_255_0, 1);
+    add_entry_uint(globals.sock_network_rtr1.s_addr, "0", INF1, DEF_MASK_255_255_255_0, 1);
+    add_entry_uint(globals.sock_network_rtr2.s_addr, "0", INF2, DEF_MASK_255_255_255_0, 1);
+    add_entry_uint(globals.sock_network_LAN0.s_addr, RTR1_IP, INF1, DEF_MASK_255_0_0_0, 1);
 }
 
 void init_build_route_table_dynamic(){
 
-    add_entry_uint(char_to_uint32("10.1.1.0"), "0", INF1, DEF_MASK_255_255_255_0);
+    add_entry_uint(char_to_uint32("10.1.1.0"), "0", INF1, DEF_MASK_255_255_255_0, 1);
 }

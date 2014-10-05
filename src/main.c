@@ -1,8 +1,20 @@
+#include "packet_sniffer.h"
 #include "arp.h"
-#include "globals.h"
 #include "route_table.h"
 #include "socket_util.h"
 #include "util.h"
+#include "ripd.h"
+
+#include "globals.h"
+
+void init_ripd_fd() {
+
+    globals.ripd_eth0_fd = create_connection(&globals.ripd_eth0_sock, 
+                                             "10.1.2.2");
+    globals.ripd_eth1_fd = create_connection(&globals.ripd_eth1_sock,
+                                             "10.1.1.2");
+
+}
 
 /**
  * Router's interfaces and its mac addresss
@@ -15,6 +27,14 @@ void init_mac_addr(){
     interface_addr(globals.send_sock_fd, INF2, globals.eth3_mac);
 
 }
+
+void start(){
+    void *val;
+
+    //pthread_create(&globals.sniff_th, 0, sniff, val);
+    pthread_create(&globals.ripd_th, 0, ripd, val);
+}
+
 
 int main(int argc, char *argv[]){
 
@@ -59,7 +79,13 @@ int main(int argc, char *argv[]){
 
     print_route_table();
 
-    sniff();
+    init_ripd_fd();
+
+    start();
+
+    //sniff();
+    //pthread_join(globals.sniff_th, NULL);
+    pthread_join(globals.ripd_th, NULL);
 
     return 0;
 }

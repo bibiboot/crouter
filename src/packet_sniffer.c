@@ -2,7 +2,7 @@
 
 int tcp=0,udp=0,icmp=0,others=0,igmp=0,total=0,i,j;
 
-void sniff()
+void* sniff(void *val)
 {
     int saddr_size , data_size;
     struct sockaddr saddr;
