@@ -4,22 +4,23 @@
 
 void set_src_mac_address(char *if_name, char *src_mac) {
     if (strcmp(if_name, INF0) == 0) {
-        memcpy(src_mac, globals.eth1_mac, 6);
+        memcpy(src_mac, globals.eth1_mac, ETH_ALEN);
     } else if (strcmp(if_name, INF1) == 0) {
-        memcpy(src_mac, globals.eth1_mac, 6);
+        memcpy(src_mac, globals.eth1_mac, ETH_ALEN);
     } else if (strcmp(if_name, INF2) == 0 ) {
-        memcpy(src_mac, globals.eth1_mac, 6);
+        memcpy(src_mac, globals.eth1_mac, ETH_ALEN);
     } else {
         printf("Interface: This shoukd not happen\n");
     }
 }
 
 bool route_logic(uint32_t network_ip, uint32_t dest_ip, char *src_mac,
-                     char *dest_mac, char *result_if_name ){
+                 char *dest_mac, char *result_if_name ){
         uint32_t res_mask;
         uint32_t next_hop;
        /* Routing table */
-       bool is_matched = get_route_entry(network_ip, dest_ip, result_if_name, &res_mask, &next_hop);
+       bool is_matched = get_route_entry(network_ip, dest_ip, result_if_name,
+                                         &res_mask, &next_hop);
 
        if ( !is_matched ) {
            return false;

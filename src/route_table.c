@@ -46,7 +46,6 @@ bool get_route_entry(uint32_t network, uint32_t dest_ip,
     */
 
     *mask = rentry->mask;
-    print_ip(rentry->next_hop);
     *next_hop = rentry->next_hop;
     strcpy(interface, rentry->interface);
 
@@ -193,7 +192,7 @@ void add_entry_rip(uint32_t network, uint32_t next_hop,
  * This will add or update the entry in the routing table
  * as per the RIP entry recieved.
  */
-void update_or_add_entry(uint32_t network, uint32_t next_hop,
+void update_or_add_entry(uint32_t network, uint32_t source_ip, uint32_t next_hop,
                          char *interface, uint32_t mask, uint32_t metric) {
     /** Look for entry in the table
      *  If the entry is not their, then add
@@ -201,8 +200,8 @@ void update_or_add_entry(uint32_t network, uint32_t next_hop,
      */
     router_entry *rentry = (router_entry*)find_entry(network);
     if( rentry == NULL ) {
-        printf("NULL\n");
-        add_entry_rip(network, next_hop, interface, mask, metric);
+        printf("RIP: Adding new entry in the routing table\n");
+        add_entry_rip(network,source_ip , interface, mask, metric);
     }
 }
 
@@ -234,4 +233,9 @@ void init_build_route_table(){
     add_entry_uint(globals.sock_network_rtr1.s_addr, "0", INF1, DEF_MASK_255_255_255_0);
     add_entry_uint(globals.sock_network_rtr2.s_addr, "0", INF2, DEF_MASK_255_255_255_0);
     add_entry_uint(globals.sock_network_LAN0.s_addr, RTR1_IP, INF1, DEF_MASK_255_0_0_0);
+}
+
+void init_build_route_table_dynamic(){
+
+    add_entry_uint(char_to_uint32("10.1.1.0"), "0", INF1, DEF_MASK_255_255_255_0);
 }

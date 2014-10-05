@@ -4,25 +4,6 @@
 #include "socket_util.h"
 #include "util.h"
 
-/*
-void init_network_id() {
-    char *network_LAN0 = LAN0_NETWORK;
-    char *network_LAN1 = LAN1_NETWORK;
-    char *network_rtr1 = RTR1_NETWORK;
-    char *network_rtr2 = RTR2_NETWORK;
-
-    memset(&globals.sock_network_LAN0, 0, sizeof(struct in_addr));
-    memset(&globals.sock_network_LAN1, 0, sizeof(struct in_addr));
-    memset(&globals.sock_network_rtr1, 0, sizeof(struct in_addr));
-    memset(&globals.sock_network_rtr2, 0, sizeof(struct in_addr));
-
-    inet_aton(network_LAN0, &(globals.sock_network_LAN0));
-    inet_aton(network_LAN1, &(globals.sock_network_LAN1));
-    inet_aton(network_rtr1, &(globals.sock_network_rtr1));
-    inet_aton(network_rtr2, &(globals.sock_network_rtr2));
-}
-*/
-
 /**
  * Router's interfaces and its mac addresss
  * Needed to sniff only certain interfaces
@@ -37,9 +18,6 @@ void init_mac_addr(){
 
 int main(int argc, char *argv[]){
 
-    /* Initiliaze all the network ids in the topo as sock */
-    //init_network_id();
-
     /* Create file descriptor to write the packet */
     create_log_file();
 
@@ -49,14 +27,35 @@ int main(int argc, char *argv[]){
     /* Get MAC address of all the three interfaces */
     init_mac_addr();
 
+#ifdef FORWARD
+
     /* Build the arp table */
     init_build_arp_cache();
 
-    /* Print the arp table */
-    print_arp_cache_table();
-
+    uint32_t lan_node[] = { char_to_uint32(RTR1_IP),
+                            char_to_uint32(RTR2_IP),
+                            char_to_uint32(NODE3_IP),
+                            char_to_uint32(NODE4_IP)
+                          };
     /* Building initial routing table */
     init_build_route_table();
+
+#endif
+
+#ifdef DYNAMIC
+
+    /* Build the arp table */
+    init_build_arp_cache_dynamic();
+
+    uint32_t lan_node[] = { char_to_uint32(RTR1_IP), char_to_uint32(NODE3_IP) };
+
+    /* Building initial routing table */
+    init_build_route_table_dynamic();
+
+#endif
+
+    /* Print the arp table */
+    print_arp_cache_table_list(lan_node, sizeof(lan_node)/sizeof(lan_node[0]));
 
     print_route_table();
 

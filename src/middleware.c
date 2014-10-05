@@ -40,6 +40,7 @@ void incoming_packet_handler_rip(unsigned char *buffer, int data_size) {
     uint32_t next_hop = EXTRACT_32BITS(&ni->rip_router);;
     uint32_t mask = ni->rip_dest_mask;
     uint32_t metric = EXTRACT_32BITS(&ni->rip_metric);
+    uint32_t source_ip = iph->saddr;
 
     char interface[IFNAMSIZ];
     get_recived_interface(iph->saddr, interface);
@@ -47,10 +48,10 @@ void incoming_packet_handler_rip(unsigned char *buffer, int data_size) {
     // Print the details here
 
     // Update the routing table
-    printf("RIP Packet Found\n");
-    print_udp_packet(buffer, data_size);
+    printf("\nRIP Packet Found\n");
+    //print_udp_packet(buffer, data_size);
 
-    update_or_add_entry(network, next_hop, interface,
+    update_or_add_entry(network, source_ip, next_hop, interface,
                         mask, metric);
 
     print_route_table();

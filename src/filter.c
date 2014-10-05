@@ -36,6 +36,18 @@ bool is_rip_packet(unsigned char *packet, int data_size) {
     return false;
 }
 
+bool is_same_topology(uint32_t dest_ip) {
+    uint32_t value = dest_ip & char_to_uint32("255.0.0.0");
+    //print_ip(value);
+    //printf("\n");
+    uint32_t topo_network = char_to_uint32("10.0.0.0");
+    if (value == topo_network) {
+        //printf("Same network\n");
+        return true;
+    }
+    return false;
+}
+
 /**
  * Allow a packet to be sniffed or not.
  * First filter to incoming packet.
@@ -59,14 +71,22 @@ bool is_allowed(unsigned char *packet, int data_size){
      */
     if (iph->protocol ==  17 || iph->protocol == 1 || iph->protocol == 6) {
 
-         //print_ip(dest.sin_addr.s_addr);
-         //printf("\n");
 
-        if (is_mac_addr_equal(eth->h_dest, globals.eth1_mac) ||
+        if (( is_mac_addr_equal(eth->h_dest, globals.eth1_mac) ||
             is_mac_addr_equal(eth->h_dest, globals.eth2_mac) ||
             is_mac_addr_equal(eth->h_dest, globals.eth3_mac) ||
-            ( is_ip_equal(inet_ntoa(dest.sin_addr), MULTICAST_IP)) ) {
-            return true;
+            ( is_ip_equal(inet_ntoa(dest.sin_addr), MULTICAST_IP)) ) &&
+            ( is_same_topology( iph->daddr ) ||
+            ( is_ip_equal(inet_ntoa(dest.sin_addr), MULTICAST_IP)))) {
+
+             /*
+             printf("\nAllowed : Source ip : ");
+             print_ip(source.sin_addr.s_addr);
+             printf(" Destination ip : ");
+             print_ip(dest.sin_addr.s_addr);
+             printf("\n");
+             */
+             return true;
         }
     }
     return false;

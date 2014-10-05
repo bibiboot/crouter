@@ -41,15 +41,15 @@
 
 #ifdef DYNAMIC
 #define RTR1_IP "10.1.2.3"
-#define RTR2_IP "10.10.3.2"
-#define NODE3_IP "10.1.2.3"
-#define NODE4_IP "10.1.2.4"
+#define RTR2_IP "0.0.0.0"
+#define NODE3_IP "10.1.1.3"
+#define NODE4_IP "0.0.0.0"
 #define INF0 "eth0"
 #define INF1 "eth1"
 #define INF2 "eth2"
-#define ETH0_IP "10.1.2.1"
-#define ETH1_IP "10.10.3.1"
-#define ETH2_IP "10.10.1.2"
+#define ETH0_IP "10.1.2.2"
+#define ETH1_IP "10.1.1.2"
+#define ETH2_IP "0.0.0.0"
 #endif
 
 #ifdef PERFORMACE
@@ -104,7 +104,7 @@ struct globals {
     struct in_addr sock_network_LAN1;
     struct in_addr sock_network_rtr1;
     struct in_addr sock_network_rtr2;
-    uint32_t rtable_keys[100];
+    uint32_t rtable_keys[10];
     int rtable_size;
 };
 
