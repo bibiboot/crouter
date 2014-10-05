@@ -1,15 +1,19 @@
 #include "ripd.h"
 
-int create_ripd_packet(struct rip *rph,
-                       struct rip_netinfo *ni,
-                       char *buffer) {
+int create_ripd_packet(char *buffer) {
         struct sockaddr_in entry , mask , nexthop;
+        struct rip *rph = malloc(sizeof(struct rip));
 
 	rph->rip_cmd = 2;
 	rph->rip_vers = 2;
 
+	memcpy(buffer ,rph , sizeof(struct rip));
+        free(rph);
+
         int i;
         for (i = 0; i < globals.rtable_size; i++) {
+
+            struct rip_netinfo *ni  = malloc(sizeof(struct rip_netinfo));
 
 	    ni->rip_family = htons(AF_INET) ;
 	    ni->rip_tag = 0;
@@ -17,14 +21,23 @@ int create_ripd_packet(struct rip *rph,
             uint32_t mask, metric;
 
             uint32_t next_hop = get_route_entry_rip( globals.rtable_keys[i],
-                                 &interface,
-                                 &mask, 
-                                 &metric );
+                                                     &interface,
+                                                     &mask, 
+                                                     &metric );
 
 	    ni->rip_dest = globals.rtable_keys[i];
 	    ni->rip_dest_mask = mask;
 	    ni->rip_router = next_hop;
 	    ni->rip_metric = htonl(metric);
+
+            printf("Debug: Sending route: Network:  ");
+            print_ip(ni->rip_dest);
+            printf("  ,Mask : ");
+            print_ip(mask);
+            printf("  ,Next hop : ");
+            print_ip(next_hop);
+            printf("  ,Metric : %d", metric);
+            printf("\n");
 
             /*
 	    ni->rip_dest = char_to_uint32("10.1.1.0");
@@ -32,16 +45,13 @@ int create_ripd_packet(struct rip *rph,
 	    ni->rip_router = char_to_uint32("0.0.0.0");
 	    ni->rip_metric = htonl(1);
             */
-            break;
+
+	    memcpy((buffer + sizeof(struct rip) + sizeof(struct rip_netinfo) * i) , 
+                    ni , sizeof(struct rip_netinfo));
+            free(ni);
         }
 
-	memcpy(buffer ,rph , sizeof(struct rip));
-	memcpy((buffer + sizeof(struct rip)) , 
-               ni , sizeof(struct rip_netinfo));
-	memcpy((buffer + sizeof(struct rip) + sizeof(struct rip_netinfo)) , 
-               ni , sizeof(struct rip_netinfo));
-	
-	int datalen = sizeof(struct rip) + sizeof(struct rip_netinfo) + sizeof(struct rip_netinfo) ; 
+	int datalen = sizeof(struct rip) + sizeof(struct rip_netinfo) * globals.rtable_size ; 
 	*( buffer + datalen) = '\0';
 
         return datalen;
@@ -75,7 +85,6 @@ int create_connection(struct sockaddr_in *groupSock,
     groupSock->sin_family = AF_INET;	
     groupSock->sin_addr.s_addr = inet_addr(MULTICAST_IP);
     groupSock->sin_port = htons(RIP_PORT);
-    fprintf(stdout , "\n ServerPort:   %u \n",groupSock->sin_port);
  
     bind(sd,(struct sockaddr *)&cliaddr,sizeof(cliaddr));
 
@@ -93,13 +102,19 @@ int create_connection(struct sockaddr_in *groupSock,
 
 void* ripd(void *val) {
 	
-    char *buffer = malloc (sizeof(struct rip_netinfo)*2 + sizeof(struct rip));
+    char *buffer;
 
-    struct rip *rph = malloc(sizeof(struct rip));
-    struct rip_netinfo *ni  = malloc(sizeof(struct rip_netinfo));
+    while(1) {
+        buffer = malloc (sizeof(struct rip_netinfo)*globals.rtable_size + sizeof(struct rip) + 1);
 
-    int datalen = create_ripd_packet(rph, ni, buffer );
+        int datalen = create_ripd_packet( buffer );
 
-    send_ripd( globals.ripd_eth0_fd, buffer, datalen, &globals.ripd_eth0_sock );
-    send_ripd( globals.ripd_eth1_fd, buffer, datalen, &globals.ripd_eth1_sock );
+        send_ripd( globals.ripd_eth0_fd, buffer, datalen, &globals.ripd_eth0_sock );
+        send_ripd( globals.ripd_eth1_fd, buffer, datalen, &globals.ripd_eth1_sock );
+        printf("Sending multicast rip packets\n");
+        fflush(stdout);
+        sleep(30); 
+        free(buffer);
+    }
+
 }

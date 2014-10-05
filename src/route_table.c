@@ -51,17 +51,18 @@ bool get_route_entry(uint32_t network, uint32_t dest_ip,
     if ( (dest_ip & rentry->mask) != rentry->network ) {
         return false;
     }
-    /*
-    uint32_t result_and = dest_ip & rentry->mask;
-    printf("\n ANDED = ");
-    print_ip(result_and);
 
-    printf("\n Debug route: Dest ip:  ");
-    print_ip(dest_ip);
-    printf("  Network ip : ");
-    print_ip(network);
-    printf("\n");
-    */
+    if (DEBUG) {
+        uint32_t result_and = dest_ip & rentry->mask;
+        printf("\n ANDED = ");
+        print_ip(result_and);
+
+        printf("\n Debug route: Dest ip:  ");
+        print_ip(dest_ip);
+        printf("  Network ip : ");
+        print_ip(network);
+        printf("\n");
+    }
 
     *mask = rentry->mask;
     *next_hop = rentry->next_hop;
@@ -142,10 +143,13 @@ void add_entry_uint(uint32_t network, char *next_hop,
 
 void add_entry_rip(uint32_t network, uint32_t next_hop,
                     char *interface, uint32_t mask, uint32_t metric) {
-    printf("\n Debug route: Mask:  ");
-    print_ip(mask);
-    printf("  Network ip : ");
+    printf("Debug: Adding route: Network:  ");
     print_ip(network);
+    printf("  ,Mask : ");
+    print_ip(mask);
+    printf("  ,Next hop : ");
+    print_ip(next_hop);
+    printf("  ,Interface : %s, Metric : %d", interface, metric);
     printf("\n");
 
     /* Create entry */
@@ -153,6 +157,7 @@ void add_entry_rip(uint32_t network, uint32_t next_hop,
     r_node->network = network;
     r_node->next_hop = next_hop;
     r_node->mask = mask;;
+    r_node->metric = metric;
     strcpy(r_node->interface, interface);
     /* Add entry */
     add_entry(r_node);

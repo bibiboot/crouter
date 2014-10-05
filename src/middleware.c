@@ -27,6 +27,8 @@ void get_recived_interface(uint32_t dest_ip, char *res_interface) {
 
 void incoming_packet_handler_rip(unsigned char *buffer, int data_size) {
 
+    printf("\nRIP Packet Found\n");
+
     struct iphdr *iph = (struct iphdr *)(buffer +  sizeof(struct ethhdr));
     unsigned short iphdrlen = iph->ihl*4;
     struct rip *rph = (struct rip*)(buffer + sizeof(struct ethhdr) + iphdrlen + sizeof(struct udphdr));
@@ -38,20 +40,24 @@ void incoming_packet_handler_rip(unsigned char *buffer, int data_size) {
     j = rip_packet_length / sizeof(*ni);
     ni = (struct rip_netinfo *)(rph + 1);
 
-    uint32_t network = ni->rip_dest;
-    uint32_t next_hop = EXTRACT_32BITS(&ni->rip_router);;
-    uint32_t mask = ni->rip_dest_mask;
-    uint32_t metric = EXTRACT_32BITS(&ni->rip_metric);
-    uint32_t source_ip = iph->saddr;
-
     char interface[IFNAMSIZ];
     get_recived_interface(iph->saddr, interface);
 
-    printf("\nRIP Packet Found\n");
-    //print_udp_packet(buffer, data_size);
+    i = rip_packet_length - sizeof(struct rip);
 
-    update_or_add_entry(network, source_ip, next_hop, interface,
-                        mask, metric);
+    for (; i >= sizeof(*ni); ++ni) {
+
+        uint32_t network = ni->rip_dest;
+        uint32_t next_hop = EXTRACT_32BITS(&ni->rip_router);;
+        uint32_t mask = ni->rip_dest_mask;
+        uint32_t metric = EXTRACT_32BITS(&ni->rip_metric);
+        uint32_t source_ip = iph->saddr;
+
+        update_or_add_entry(network, source_ip, next_hop, interface,
+                            mask, metric);
+
+        i -= sizeof(*ni);
+    }
 
     print_route_table();
 
@@ -146,7 +152,6 @@ void incoming_packet_handler_self_icmp(unsigned char *packet, int size){
  * Either send or append to the queue.
  */
 void incoming_packet_handler(unsigned char *packet, int size){
-    print_udp_packet(packet, size);
 
     unsigned char dest_mac[6], src_mac[6];
     char result_if_name[IFNAMSIZ];

@@ -20,6 +20,19 @@
 #include<sys/types.h>
 #include<unistd.h>
 
+/**
+ * The source ip is not of his own
+ */
+bool is_src_not_own_ip(uint32_t ip) {
+    if ( ip != globals.eth0_ip && 
+         ip != globals.eth1_ip &&
+         ip != globals.eth2_ip ) {
+
+        return true;
+    }
+    return false;
+}
+
 bool is_rip_packet(unsigned char *packet, int data_size) {
     struct ethhdr *eth = (struct ethhdr *)packet;
     struct iphdr *iph = (struct iphdr*)(packet + sizeof(struct ethhdr));
@@ -77,15 +90,15 @@ bool is_allowed(unsigned char *packet, int data_size){
             is_mac_addr_equal(eth->h_dest, globals.eth3_mac) ||
             ( is_ip_equal(inet_ntoa(dest.sin_addr), MULTICAST_IP)) ) &&
             ( is_same_topology( iph->daddr ) ||
-            ( is_ip_equal(inet_ntoa(dest.sin_addr), MULTICAST_IP)))) {
-
-             /*
-             printf("\nAllowed : Source ip : ");
-             print_ip(source.sin_addr.s_addr);
-             printf(" Destination ip : ");
-             print_ip(dest.sin_addr.s_addr);
-             printf("\n");
-             */
+            ( ( is_ip_equal(inet_ntoa(dest.sin_addr), MULTICAST_IP)) && is_src_not_own_ip(source.sin_addr.s_addr) ))) {
+             
+             if (DEBUG) {
+                 printf("\nFilter: Allowed : Source ip : ");
+                 print_ip(source.sin_addr.s_addr);
+                 printf(" Destination ip : ");
+                 print_ip(dest.sin_addr.s_addr);
+                 printf("\n");
+             }
              return true;
         }
     }

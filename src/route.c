@@ -18,9 +18,10 @@ bool route_logic(uint32_t network_ip, uint32_t dest_ip, char *src_mac,
                  char *dest_mac, char *result_if_name ){
         uint32_t res_mask;
         uint32_t next_hop;
+        uint32_t metric;
        /* Routing table */
        bool is_matched = get_route_entry(network_ip, dest_ip, result_if_name,
-                                         &res_mask, &next_hop);
+                                         &res_mask, &next_hop, &metric);
 
        if ( !is_matched ) {
            return false;

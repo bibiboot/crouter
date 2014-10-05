@@ -18,10 +18,11 @@
 #define DYNAMIC
 //#define PERFORMACE
 
+#define DEBUG 0
+
 #define PACKET_SIZE 65536
 #define RIP_PORT 520
 // Print function name, filename and line number in print
-#define DEBUG(fmt, ...) printf("%s:%d: " fmt, __FILE__, __LINE__, __VA_ARGS__);
 #define DBG(...) do{fprintf(stderr, "%s (%s, line %d): ", __func__, __FILE__, __LINE__); \
                          fprintf(stderr, __VA_ARGS__);           \
                          fprintf(stderr, "\n");} while(0)
@@ -111,6 +112,7 @@ struct globals {
     pthread_t sniff_th, ripd_th;
     int ripd_eth0_fd, ripd_eth1_fd;
     struct sockaddr_in ripd_eth0_sock, ripd_eth1_sock;
+    uint32_t eth0_ip, eth1_ip, eth2_ip;
 };
 
 struct rip {

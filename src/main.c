@@ -4,16 +4,20 @@
 #include "socket_util.h"
 #include "util.h"
 #include "ripd.h"
-
 #include "globals.h"
+
+void init_own_ip() {
+    globals.eth0_ip = char_to_uint32(ETH0_IP);
+    globals.eth1_ip = char_to_uint32(ETH1_IP);
+    globals.eth2_ip = char_to_uint32(ETH2_IP);
+}
 
 void init_ripd_fd() {
 
     globals.ripd_eth0_fd = create_connection(&globals.ripd_eth0_sock, 
-                                             "10.1.2.2");
+                                             ETH0_IP);
     globals.ripd_eth1_fd = create_connection(&globals.ripd_eth1_sock,
-                                             "10.1.1.2");
-
+                                            ETH1_IP);
 }
 
 /**
@@ -31,12 +35,15 @@ void init_mac_addr(){
 void start(){
     void *val;
 
-    //pthread_create(&globals.sniff_th, 0, sniff, val);
+    pthread_create(&globals.sniff_th, 0, sniff, val);
     pthread_create(&globals.ripd_th, 0, ripd, val);
 }
 
 
 int main(int argc, char *argv[]){
+
+    /* Get own ip in uint32 format */
+    init_own_ip();
 
     /* Create file descriptor to write the packet */
     create_log_file();
@@ -84,7 +91,7 @@ int main(int argc, char *argv[]){
     start();
 
     //sniff();
-    //pthread_join(globals.sniff_th, NULL);
+    pthread_join(globals.sniff_th, NULL);
     pthread_join(globals.ripd_th, NULL);
 
     return 0;
