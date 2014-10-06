@@ -24,7 +24,7 @@ create:
 
 # Build
 build:
-	$(CC) -o $(BIN_DIR)/r -lpthread $(_SOURCES) $(INCLUDES)
+	$(CC) -lpthread -o $(BIN_DIR)/r -lpthread $(_SOURCES) $(INCLUDES) -lpthread
 
 clean:
 	@echo "Deleting bin folder"
