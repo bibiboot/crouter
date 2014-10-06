@@ -16,7 +16,7 @@
 void get_recived_interface(uint32_t dest_ip, char *res_interface) {
     // Ip of the sending router with RIP packet
     if ( dest_ip == char_to_uint32(RTR1_IP) ) {
-       strcpy(res_interface, INF0);
+       strcpy(res_interface, INF1);
     } else {
        printf("RIP: This should never happen, No interface found for : ");
        print_ip(dest_ip);
@@ -52,6 +52,10 @@ void incoming_packet_handler_rip(unsigned char *buffer, int data_size) {
         uint32_t mask = ni->rip_dest_mask;
         uint32_t metric = EXTRACT_32BITS(&ni->rip_metric);
         uint32_t source_ip = iph->saddr;
+
+        if (next_hop == 0) {
+            metric++;
+        }
 
         update_or_add_entry(network, source_ip, next_hop, interface,
                             mask, metric);

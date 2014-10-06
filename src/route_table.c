@@ -8,7 +8,7 @@
 #define RTR1_NETWORK "10.10.1.0"
 #define RTR2_NETWORK "10.10.3.0"
 
-uint32_t get_route_entry_print(uint32_t network, char *interface, 
+uint32_t get_route_entry_print(uint32_t network, char *interface,
                                uint32_t *mask, uint32_t *metric) {
 
     router_entry *rentry = (router_entry*)find_entry(network);
@@ -23,7 +23,7 @@ uint32_t get_route_entry_print(uint32_t network, char *interface,
     return rentry->next_hop;
 }
 
-uint32_t get_route_entry_rip(uint32_t network, char *interface, 
+uint32_t get_route_entry_rip(uint32_t network, char *interface,
                              uint32_t *mask, uint32_t *metric) {
 
     router_entry *rentry = (router_entry*)find_entry(network);
@@ -210,7 +210,7 @@ void init_build_route_table(){
     add_entry_uint(globals.sock_network_LAN1.s_addr, "0", INF0, DEF_MASK_255_255_255_0, 1);
     add_entry_uint(globals.sock_network_rtr1.s_addr, "0", INF1, DEF_MASK_255_255_255_0, 1);
     add_entry_uint(globals.sock_network_rtr2.s_addr, "0", INF2, DEF_MASK_255_255_255_0, 1);
-    add_entry_uint(globals.sock_network_LAN0.s_addr, RTR1_IP, INF1, DEF_MASK_255_0_0_0, 1);
+    //add_entry_uint(globals.sock_network_LAN0.s_addr, RTR1_IP, INF1, DEF_MASK_255_0_0_0, 1);
 }
 
 void init_build_route_table_dynamic(){

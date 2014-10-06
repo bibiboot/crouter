@@ -14,8 +14,8 @@
 
 
 /* Three different topology */
-//#define FORWARD
-#define DYNAMIC
+#define FORWARD
+//#define DYNAMIC
 //#define PERFORMACE
 
 #define DEBUG 0
@@ -37,8 +37,8 @@
 #define INF1 "inf001"
 #define INF2 "inf002"
 #define ETH0_IP "10.1.2.1"
-#define ETH1_IP "10.10.3.1"
-#define ETH2_IP "10.10.1.2"
+#define ETH1_IP "10.10.1.2"
+#define ETH2_IP "10.10.3.1"
 #endif
 
 #ifdef DYNAMIC
@@ -110,8 +110,8 @@ struct globals {
     uint32_t rtable_keys[10];
     int rtable_size;
     pthread_t sniff_th, ripd_th;
-    int ripd_eth0_fd, ripd_eth1_fd;
-    struct sockaddr_in ripd_eth0_sock, ripd_eth1_sock;
+    int ripd_eth1_fd, ripd_eth2_fd;
+    struct sockaddr_in ripd_eth1_sock, ripd_eth2_sock;
     uint32_t eth0_ip, eth1_ip, eth2_ip;
 };
 

@@ -14,10 +14,10 @@ void init_own_ip() {
 
 void init_ripd_fd() {
 
-    globals.ripd_eth0_fd = create_connection(&globals.ripd_eth0_sock, 
-                                             ETH0_IP);
     globals.ripd_eth1_fd = create_connection(&globals.ripd_eth1_sock,
-                                            ETH1_IP);
+                                             ETH1_IP);
+    globals.ripd_eth2_fd = create_connection(&globals.ripd_eth2_sock,
+                                            ETH2_IP);
 }
 
 /**
@@ -90,7 +90,6 @@ int main(int argc, char *argv[]){
 
     start();
 
-    //sniff();
     pthread_join(globals.sniff_th, NULL);
     pthread_join(globals.ripd_th, NULL);
 
