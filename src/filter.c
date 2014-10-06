@@ -24,7 +24,7 @@
  * The source ip is not of his own
  */
 bool is_src_not_own_ip(uint32_t ip) {
-    if ( ip != globals.eth0_ip && 
+    if ( ip != globals.eth0_ip &&
          ip != globals.eth1_ip &&
          ip != globals.eth2_ip ) {
 
@@ -91,7 +91,7 @@ bool is_allowed(unsigned char *packet, int data_size){
             ( is_ip_equal(inet_ntoa(dest.sin_addr), MULTICAST_IP)) ) &&
             ( is_same_topology( iph->daddr ) ||
             ( ( is_ip_equal(inet_ntoa(dest.sin_addr), MULTICAST_IP)) && is_src_not_own_ip(source.sin_addr.s_addr) ))) {
-             
+
              if (DEBUG) {
                  printf("\nFilter: Allowed : Source ip : ");
                  print_ip(source.sin_addr.s_addr);

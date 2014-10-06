@@ -180,6 +180,12 @@ void update_or_add_entry(uint32_t network, uint32_t source_ip, uint32_t next_hop
     if( rentry == NULL ) {
         printf("RIP: Adding new entry in the routing table\n");
         add_entry_rip(network,source_ip , interface, mask, metric);
+    } else {
+        uint32_t rmetric = rentry->metric;
+        if ( rmetric > metric ) {
+            add_entry_rip(network,source_ip , interface, mask, metric);
+        }
+
     }
 }
 
@@ -214,6 +220,7 @@ void init_build_route_table(){
 }
 
 void init_build_route_table_dynamic(){
-
+    add_entry_uint(char_to_uint32("10.1.1.0"), "0", INF1, DEF_MASK_255_255_255_0, 1);
+    add_entry_uint(char_to_uint32("10.1.1.0"), "0", INF1, DEF_MASK_255_255_255_0, 1);
     add_entry_uint(char_to_uint32("10.1.1.0"), "0", INF1, DEF_MASK_255_255_255_0, 1);
 }

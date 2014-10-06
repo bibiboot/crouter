@@ -36,7 +36,9 @@ void start(){
     void *val;
 
     pthread_create(&globals.sniff_th, 0, sniff, val);
+#ifdef RIP
     pthread_create(&globals.ripd_th, 0, ripd, val);
+#endif
 }
 
 
@@ -91,7 +93,10 @@ int main(int argc, char *argv[]){
     start();
 
     pthread_join(globals.sniff_th, NULL);
+
+#ifdef RIP
     pthread_join(globals.ripd_th, NULL);
+#endif
 
     return 0;
 }

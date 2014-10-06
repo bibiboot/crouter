@@ -1,7 +1,8 @@
 #include "ripd.h"
 
+#define LAN1_NETWORK "10.1.2.0"
+
 int create_ripd_packet(char *buffer, char *sender_interface) {
-        struct sockaddr_in entry , mask , nexthop;
         struct rip *rph = malloc(sizeof(struct rip));
 
 	rph->rip_cmd = 2;
@@ -11,7 +12,7 @@ int create_ripd_packet(char *buffer, char *sender_interface) {
         free(rph);
 
         int i;
-        for (i = 0; i < globals.rtable_size; i++) {
+        //for (i = 0; i < globals.rtable_size; i++) {
 
             struct rip_netinfo *ni  = malloc(sizeof(struct rip_netinfo));
 
@@ -20,7 +21,8 @@ int create_ripd_packet(char *buffer, char *sender_interface) {
             char interface[100];
             uint32_t mask, metric;
 
-            uint32_t next_hop = get_route_entry_rip( globals.rtable_keys[i],
+            //uint32_t next_hop = get_route_entry_rip( globals.rtable_keys[i],
+            uint32_t next_hop = get_route_entry_rip( char_to_uint32(LAN1_NETWORK),
                                                      &interface,
                                                      &mask,
                                                      &metric );
@@ -30,11 +32,13 @@ int create_ripd_packet(char *buffer, char *sender_interface) {
                 continue;
             }*/
 
-	    ni->rip_dest = globals.rtable_keys[i];
+	    //ni->rip_dest = globals.rtable_keys[i];
+	    ni->rip_dest = char_to_uint32(LAN1_NETWORK);
 	    ni->rip_dest_mask = mask;
 	    ni->rip_router = next_hop;
 	    ni->rip_metric = htonl(metric);
 
+            /*
             printf("Debug: Sending route: Network:  ");
             print_ip(ni->rip_dest);
             printf("  ,Mask : ");
@@ -43,6 +47,7 @@ int create_ripd_packet(char *buffer, char *sender_interface) {
             print_ip(next_hop);
             printf("  ,Metric : %d", metric);
             printf("\n");
+            */
 
             /*
 	    ni->rip_dest = char_to_uint32("10.1.1.0");
@@ -51,12 +56,15 @@ int create_ripd_packet(char *buffer, char *sender_interface) {
 	    ni->rip_metric = htonl(1);
             */
 
-	    memcpy((buffer + sizeof(struct rip) + sizeof(struct rip_netinfo) * i) ,
+	    //memcpy((buffer + sizeof(struct rip) + sizeof(struct rip_netinfo) * i) ,
+            //        ni , sizeof(struct rip_netinfo));
+	    memcpy((buffer + sizeof(struct rip)) ,
                     ni , sizeof(struct rip_netinfo));
             free(ni);
-        }
+        //}
 
-	int datalen = sizeof(struct rip) + sizeof(struct rip_netinfo) * globals.rtable_size ;
+	//int datalen = sizeof(struct rip) + sizeof(struct rip_netinfo) * globals.rtable_size ;
+	int datalen = sizeof(struct rip) + sizeof(struct rip_netinfo) ;
 	*( buffer + datalen) = '\0';
 
         return datalen;
@@ -110,13 +118,14 @@ void* ripd(void *val) {
     char *buffer;
 
     while(1) {
-        buffer = malloc (sizeof(struct rip_netinfo)*globals.rtable_size + sizeof(struct rip) + 1);
+        //buffer = malloc (sizeof(struct rip_netinfo)*globals.rtable_size + sizeof(struct rip) + 1);
+        buffer = malloc (sizeof(struct rip_netinfo) + sizeof(struct rip) + 1);
 
         int datalen_inf1 = create_ripd_packet( buffer, INF1 );
-        //int datalen_inf2 = create_ripd_packet( buffer, INF2 );
+        int datalen_inf2 = create_ripd_packet( buffer, INF2 );
 
         send_ripd( globals.ripd_eth1_fd, buffer, datalen_inf1, &globals.ripd_eth1_sock );
-        //send_ripd( globals.ripd_eth2_fd, buffer, datalen_inf2, &globals.ripd_eth2_sock );
+        send_ripd( globals.ripd_eth2_fd, buffer, datalen_inf2, &globals.ripd_eth2_sock );
         printf("Sending multicast rip packets\n");
         fflush(stdout);
         sleep(30);

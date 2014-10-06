@@ -16,9 +16,10 @@
 /* Three different topology */
 #define FORWARD
 //#define DYNAMIC
-//#define PERFORMACE
 
 #define DEBUG 0
+
+#define RIP
 
 #define PACKET_SIZE 65536
 #define RIP_PORT 520
@@ -52,10 +53,6 @@
 #define ETH0_IP "10.1.2.2"
 #define ETH1_IP "10.1.1.2"
 #define ETH2_IP "0.0.0.0"
-#endif
-
-#ifdef PERFORMACE
-#define test 1
 #endif
 
 #define MULTICAST_IP "224.0.0.9"

@@ -17,6 +17,8 @@ void get_recived_interface(uint32_t dest_ip, char *res_interface) {
     // Ip of the sending router with RIP packet
     if ( dest_ip == char_to_uint32(RTR1_IP) ) {
        strcpy(res_interface, INF1);
+    } else if ( dest_ip == char_to_uint32(RTR2_IP) ) {
+       strcpy(res_interface, INF2);
     } else {
        printf("RIP: This should never happen, No interface found for : ");
        print_ip(dest_ip);
@@ -27,7 +29,7 @@ void get_recived_interface(uint32_t dest_ip, char *res_interface) {
 
 void incoming_packet_handler_rip(unsigned char *buffer, int data_size) {
 
-    printf("\nRIP Packet Found\n");
+    printf("\nRIP Packet Found from \n");
 
     struct iphdr *iph = (struct iphdr *)(buffer +  sizeof(struct ethhdr));
     unsigned short iphdrlen = iph->ihl*4;
@@ -53,6 +55,19 @@ void incoming_packet_handler_rip(unsigned char *buffer, int data_size) {
         uint32_t metric = EXTRACT_32BITS(&ni->rip_metric);
         uint32_t source_ip = iph->saddr;
 
+        printf("\nRIP Update recieved from: ");
+        print_ip(source_ip);
+        printf(", for Network: ");
+        print_ip(network);
+        printf(", Next-hop: ");
+        print_ip(next_hop);
+        printf(", metric: %d", metric);
+
+        if (metric >= 16) {
+            printf("\nDrop packet as metric greater then 16\n");
+            return;
+        }
+
         if (next_hop == 0) {
             metric++;
         }
@@ -62,6 +77,7 @@ void incoming_packet_handler_rip(unsigned char *buffer, int data_size) {
 
         i -= sizeof(*ni);
     }
+    printf("\n");
 
     print_route_table();
 
