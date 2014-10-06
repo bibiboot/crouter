@@ -105,17 +105,19 @@ void incoming_packet_handler_ttl_zero(unsigned char *packet, int size) {
     print_routed_packet(dest, result_if_name, src_mac, dest_mac);
 
     int new_packet_size = get_resize_icmp_packet_time_exc_reply(packet,size);
+    new_packet_size = 70;
     printf("Old size = %d and New size = %d\n", size, new_packet_size);
 
     unsigned char *new_packet = malloc(new_packet_size);
+    memset(new_packet, 0, new_packet_size);
 
     //Copy the whole old packet to the new packet
-    memcpy(new_packet, packet, size);
+    memcpy(new_packet, packet, new_packet_size);
 
     // Reply back to the source mac address
     update_ethernet_packet_reply(new_packet);
 
-    update_icmp_packet_time_exc_reply(new_packet, size);
+    update_icmp_packet_time_exc_reply(new_packet, new_packet_size);
 
     update_ip_packet_time_exc_reply(new_packet);
 
@@ -124,6 +126,9 @@ void incoming_packet_handler_ttl_zero(unsigned char *packet, int size) {
     print_icmp_packet(new_packet, new_packet_size);
 
     free(new_packet);
+
+    fflush(LOGFILE);
+    fflush(stdout);
 }
 
 /**
